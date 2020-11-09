@@ -101,5 +101,11 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\WGLGraphics\WGLGraphics.vcxproj">
+      <Project>{f7d9b87a-716f-488b-b9d4-5f9ba9331ee1}</Project>
+      <Name>WGLGraphics</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
