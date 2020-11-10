@@ -10,6 +10,7 @@
 #define EXPORT extern "C" __declspec(dllexport)
 
 EXPORT int GLCreate(const void* handle);
+EXPORT int Render();
 
 class WGLContext
 {
@@ -19,6 +20,8 @@ public:
 
 	bool create(HWND hWnd);
 	void destory();
+	void render();
+	void present();
 
 	HDC m_hDC = 0;
 	HWND m_hWnd = 0;
@@ -36,6 +39,27 @@ extern "C" {
 		context = new WGLContext();
 		if (!context->create((HWND)handle))
 			return -1;
+
+		char* szVersion = (char*)glGetString(GL_VERSION);
+		GLint last_viewport[4];
+		glGetIntegerv(GL_VIEWPORT, last_viewport);
+		GLint last_scissor_box[4];
+		glGetIntegerv(GL_SCISSOR_BOX, last_scissor_box);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glGetIntegerv(GL_VIEWPORT, last_viewport);
+		glGetIntegerv(GL_SCISSOR_BOX, last_scissor_box);
+
+
+		return 0;
+	}
+
+	int Render()
+	{
+		if (context) {
+			context->render();
+			context->present();
+		}
 		return 0;
 	}
 }
@@ -194,6 +218,7 @@ bool WGLContext::create(HWND hWnd) {
 	if (m_hRC == NULL)
 		return false;
 
+	// Test C++ 2017 syntax
 	if (auto error (glewInit()); error != GLEW_OK)
 	{
 		/* Problem: glewInit failed, something is seriously wrong. */
@@ -214,20 +239,24 @@ bool WGLContext::create(HWND hWnd) {
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 #endif // _DEBUG
 
-	GLint last_viewport[4];
-	glGetIntegerv(GL_VIEWPORT, last_viewport);
-	GLint last_scissor_box[4];
-	glGetIntegerv(GL_SCISSOR_BOX, last_scissor_box);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glGetIntegerv(GL_VIEWPORT, last_viewport);
-	glGetIntegerv(GL_SCISSOR_BOX, last_scissor_box);
-
-	char* szVersion = (char*)glGetString(GL_VERSION);
-
-	return false;
+	return true;
 }
 
 void WGLContext::destory()
 {
+}
+
+void WGLContext::render()
+{
+	wglMakeCurrent(m_hDC, m_hRC);
+
+	static float c = 0.f;
+	c += 0.05f;
+	glClearColor(sin(c), 0, cos(c), 1.f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+void WGLContext::present()
+{
+	SwapBuffers(m_hDC);
 }

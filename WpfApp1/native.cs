@@ -10,5 +10,8 @@ namespace Native
 
         [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
         public static extern int GLCreate(IntPtr hWND);
+
+        [DllImport(DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        public static extern int Render();
     }
 }

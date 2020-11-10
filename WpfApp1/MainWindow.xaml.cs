@@ -8,10 +8,12 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 using Native;
 
 namespace WpfApp1
@@ -21,18 +23,44 @@ namespace WpfApp1
     /// </summary>
     public partial class MainWindow : Window
     {
+        DispatcherTimer m_renderTimer;
+
         public MainWindow()
         {
             InitializeComponent();
-
-            CreateGLContext();
         }
 
-        public bool CreateGLContext()
+        public void SetupRender()
         {
-            IntPtr handle = IntPtr.Zero;
-            WGLContext.GLCreate(handle);
-            return true;
+            var wih = new WindowInteropHelper(this);
+            WGLContext.GLCreate(wih.Handle);
+
+            m_renderTimer = new DispatcherTimer(DispatcherPriority.Send);
+            m_renderTimer.Interval = TimeSpan.FromMilliseconds(16);
+            m_renderTimer.Tick += new EventHandler(OnTick);
+            m_renderTimer.Start();
+        }
+
+        public void OnTick(Object sender, EventArgs e)
+        {
+            WGLContext.Render();
+        }
+
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+
+            SetupRender();
+        }
+
+        protected override void OnRenderSizeChanged(System.Windows.SizeChangedInfo sizeInfo)
+        {
+            base.OnRenderSizeChanged(sizeInfo);
+        }
+
+        protected override void OnRender(DrawingContext drawingContext)
+        {
+            base.OnRender(drawingContext);
         }
     }
 }
