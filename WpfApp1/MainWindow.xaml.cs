@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Native;
 
 namespace WpfApp1
 {
@@ -23,6 +24,15 @@ namespace WpfApp1
         public MainWindow()
         {
             InitializeComponent();
+
+            CreateGLContext();
+        }
+
+        public bool CreateGLContext()
+        {
+            IntPtr handle = IntPtr.Zero;
+            WGLContext.GLCreate(handle);
+            return true;
         }
     }
 }
