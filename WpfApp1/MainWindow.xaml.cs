@@ -24,10 +24,13 @@ namespace WpfApp1
     public partial class MainWindow : Window
     {
         DispatcherTimer m_renderTimer;
+        CanvasGrid _canvasGrid;
 
         public MainWindow()
         {
             InitializeComponent();
+
+            Loaded += new RoutedEventHandler(OnLoadedMainWindow);
         }
 
         public void SetupRender()
@@ -53,7 +56,7 @@ namespace WpfApp1
             SetupRender();
         }
 
-        protected override void OnRenderSizeChanged(System.Windows.SizeChangedInfo sizeInfo)
+        protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
         {
             base.OnRenderSizeChanged(sizeInfo);
         }
@@ -61,6 +64,12 @@ namespace WpfApp1
         protected override void OnRender(DrawingContext drawingContext)
         {
             base.OnRender(drawingContext);
+        }
+
+        void OnLoadedMainWindow(object sender, RoutedEventArgs e)
+        {
+            _canvasGrid = new CanvasGrid();
+            View.Children.Add(_canvasGrid);
         }
     }
 }

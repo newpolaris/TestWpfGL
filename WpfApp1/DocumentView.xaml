@@ -1,0 +1,38 @@
+﻿<Window x:Class="WpfApp1.DocumentView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:WpfApp1"
+        Title="DocumentView" Height="450" Width="800" ShowInTaskbar="False" Focusable="False" WindowStyle="None">
+
+    <DockPanel LastChildFill="True">
+        <Grid Name="ContentsView">
+            <WebBrowser Name="HTMLBrowser" Visibility="Collapsed" Navigated="HTMLBrowser_Navigated" />
+            <Image Name="DocumentViewImage">
+                <Image.ContextMenu>
+                    <ContextMenu HasDropShadow="True" >
+                        <MenuItem IsCheckable="True" Header="Pen" Name="MenuPen"/>
+                    </ContextMenu>
+                </Image.ContextMenu>
+            </Image>
+            <Grid Name="VideoPlayer" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,0,0,0"  Width="200" Height="200" Visibility="Hidden">
+                <MediaElement Name="VideoArea" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                <Grid Name="ControlButtonArea" HorizontalAlignment="Left" VerticalAlignment="Top" Background="#aaffffff" Visibility="Hidden">
+                    <Button x:Name="btnPlay" Width="90" Height="20">
+                        <ContentControl>
+                            <StackPanel Orientation="Vertical" Width="Auto" HorizontalAlignment="Left">
+                                <TextBlock Text="재생" VerticalAlignment="Top" Height="20" Width="90" Foreground="#FF333333" HorizontalAlignment="Center" FontSize="15px" TextAlignment="Center" Margin="0,0,0,0" />
+                            </StackPanel>
+                        </ContentControl>
+                    </Button>
+                    <Button x:Name="btnPause" Width="90" Height="20">
+                        <ContentControl>
+                            <StackPanel Orientation="Vertical" Width="Auto" HorizontalAlignment="Left">
+                                <TextBlock Text="일시 정지" VerticalAlignment="Top" Height="20" Width="90" Foreground="#FF333333" HorizontalAlignment="Center" FontSize="15px" TextAlignment="Center" Margin="0,0,0,0" />
+                            </StackPanel>
+                        </ContentControl>
+                    </Button>
+                </Grid>
+            </Grid>
+        </Grid>
+    </DockPanel>
+</Window>

@@ -24,7 +24,7 @@
                 </ListView.Items>
             </ListView>
         </Grid>
-        <local:UserControl1 Margin="10,10,252,119"/>
         <gl:GLControl Grid.Column="0" Grid.ColumnSpan="2"/>
+        <Grid Name="View"/>
     </Grid>
 </Window>
