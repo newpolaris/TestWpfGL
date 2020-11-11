@@ -24,8 +24,6 @@ namespace WpfApp1
     public partial class MainWindow : Window
     {
         DispatcherTimer m_renderTimer;
-        CanvasGrid _canvasGrid;
-
         public MainWindow()
         {
             InitializeComponent();
@@ -35,10 +33,18 @@ namespace WpfApp1
 
         public void SetupRender()
         {
+            var wih = new WindowInteropHelper(this);
+            WGLContext.GLCreate(wih.Handle);
+
+            m_renderTimer = new DispatcherTimer(DispatcherPriority.Send);
+            m_renderTimer.Interval = TimeSpan.FromMilliseconds(16);
+            m_renderTimer.Tick += new EventHandler(OnTick);
+            m_renderTimer.Start();
         }
 
         public void OnTick(Object sender, EventArgs e)
         {
+            WGLContext.Render();
         }
 
         protected override void OnSourceInitialized(EventArgs e)
@@ -60,8 +66,6 @@ namespace WpfApp1
 
         void OnLoadedMainWindow(object sender, RoutedEventArgs e)
         {
-            _canvasGrid = new CanvasGrid();
-            View.Children.Add(_canvasGrid);
         }
     }
 }
