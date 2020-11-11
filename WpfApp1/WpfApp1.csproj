@@ -121,6 +121,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\WGLContext\WGLContext.vcxproj">
+      <Project>{7b62bf28-da4e-44ac-b4bc-6c7fd09773e6}</Project>
+      <Name>WGLContext</Name>
+    </ProjectReference>
     <ProjectReference Include="..\WGLGraphics\WGLGraphics.vcxproj">
       <Project>{f7d9b87a-716f-488b-b9d4-5f9ba9331ee1}</Project>
       <Name>WGLGraphics</Name>
@@ -137,19 +141,6 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="..\Debug\WGLContext.dll">
-      <Link>WGLContext.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Debug\WGLContext.pdb">
-      <Link>WGLContext.pdb</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="glew32d.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
