@@ -144,7 +144,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Native.cpp" />
     <ClCompile Include="Source.cpp" />
+    <ClCompile Include="TriagleRenderer.cpp" />
+    <ClCompile Include="WGLContext.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Native.h" />
+    <ClInclude Include="TriangleRenderer.h" />
+    <ClInclude Include="WGLContext.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>
