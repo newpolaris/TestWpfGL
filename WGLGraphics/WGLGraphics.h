@@ -9,7 +9,8 @@ namespace WGLGraphics {
 
 		System::Windows::Threading::DispatcherTimer^ m_renderTimer;
         System::Windows::Controls::TextBlock^ m_fpsCounter;
-		System::DateTime m_lastupdate;
+		System::DateTime m_lastUpdate;
+;
 
 		char* m_WriteableBuffer;
 		bool m_isRunning;
