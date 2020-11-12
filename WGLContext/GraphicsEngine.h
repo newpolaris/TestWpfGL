@@ -1,7 +1,5 @@
 #pragma once
 
-#include "TriangleRenderer.h"
-
 struct GLFWwindow;
 class TriangleRender;
 
@@ -14,6 +12,7 @@ public:
 	bool create(int width, int height);
 	void destroy();
 	void render();
+	void renderToBuffer(char* imageBuffer);
 	void resize(int width, int height);
 
 	GLFWwindow* m_window = nullptr;

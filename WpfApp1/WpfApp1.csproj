@@ -122,10 +122,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\WGLContext\WGLContext.vcxproj">
-      <Project>{7b62bf28-da4e-44ac-b4bc-6c7fd09773e6}</Project>
-      <Name>WGLContext</Name>
-    </ProjectReference>
     <ProjectReference Include="..\WGLGraphics\WGLGraphics.vcxproj">
       <Project>{f7d9b87a-716f-488b-b9d4-5f9ba9331ee1}</Project>
       <Name>WGLGraphics</Name>
@@ -148,9 +144,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AdditionalFiles>
     <AdditionalFiles Include="external\WGLContext.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AdditionalFiles>
-    <AdditionalFiles Include="external\WGLContext.pdb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AdditionalFiles>
   </ItemGroup>

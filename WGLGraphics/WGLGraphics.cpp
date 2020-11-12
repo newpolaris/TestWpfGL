@@ -2,6 +2,10 @@
 
 #include "WGLGraphics.h"
 
+#pragma managed(push, off)
+#include "../WGLContext/GraphicsEngine.h"
+#pragma managed(pop)
+
 using namespace System::Threading::Tasks;
 using namespace System::Windows;
 using namespace System::Windows::Media;
@@ -43,13 +47,13 @@ namespace WGLGraphics
 
             System::Windows::Controls::Panel::SetZIndex(m_ImageControl, -1);
 
-            // m_graphicsEngine = new MonoMaxGraphics::GraphicsEngine();
-			// m_graphicsEngine->Init();
+            m_graphicsEngine = new GraphicsEngine();
+			m_graphicsEngine->create(_w, _h);
 
             isInitialized = true;
         }
         
-        // m_graphicsEngine->Resize(_w, _h);
+        m_graphicsEngine->resize(_w, _h);
         m_writeableImg = gcnew WriteableBitmap(_w, _h, 96, 96, PixelFormats::Pbgra32, nullptr);
         m_WriteableBuffer = (char*)m_writeableImg->BackBuffer.ToPointer();
         m_ImageControl->Source = m_writeableImg;
@@ -57,7 +61,7 @@ namespace WGLGraphics
 
     void GLControl::Destroy(void)
 	{
-		// delete m_graphicsEngine;
+		delete m_graphicsEngine;
 	}
 
     void GLControl::UpdateImageData()
@@ -77,7 +81,7 @@ namespace WGLGraphics
             m_lastUpdate = System::DateTime::Now;
         }
 
-        // m_graphicsEngine->Render(m_WriteableBuffer);
+        m_graphicsEngine->renderToBuffer(m_WriteableBuffer);
         m_ImageControl->Dispatcher->Invoke(gcnew System::Action(this, &GLControl::UpdateImageData));
 
         fpsCounter++;

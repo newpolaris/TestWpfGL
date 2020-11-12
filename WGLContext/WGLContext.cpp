@@ -1,7 +1,8 @@
 #include "WGLContext.h"
 
-#include <GL/glew.h>
-#include <GL/wglew.h>
+#include <glad/glad.h>
+#include <GL/wgl.h>
+#include <GL/wglext.h>
 
 #include <string>
 #include <sstream>
@@ -163,13 +164,7 @@ bool WGLContext::create(HWND hWnd) {
 	if (m_hRC == NULL)
 		return false;
 
-	// Test C++ 2017 syntax
-	if (auto error (glewInit()); error != GLEW_OK)
-	{
-		/* Problem: glewInit failed, something is seriously wrong. */
-		fprintf(stderr, "Error: %s\n", glewGetErrorString(error));
-		return false;
-	}
+	gladLoadGL();
 
 	// check list "http://glew.sourceforge.net/basic.html"
 	// use arb instead https://github.com/openwebos/qt/blob/master/src/opengl/qglextensions.cpp
@@ -178,7 +173,7 @@ bool WGLContext::create(HWND hWnd) {
 #if _DEBUG
 // Set debug callback
 	if (glDebugMessageCallback != NULL) {
-		glDebugMessageCallback(glDebugCallback, NULL);
+		// glDebugMessageCallback(glDebugCallback, NULL);
 	}
 	glEnable(GL_DEBUG_OUTPUT);
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);

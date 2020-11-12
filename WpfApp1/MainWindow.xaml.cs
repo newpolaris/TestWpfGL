@@ -50,8 +50,6 @@ namespace WpfApp1
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
-
-            SetupRender();
         }
 
         protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)

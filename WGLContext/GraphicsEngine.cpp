@@ -1,10 +1,11 @@
 #include "GraphicsEngine.h"
 
-#include <GL/glew.h>
-#include <GL/wglew.h>
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 #include <memory>
+
+#include "TriangleRenderer.h"
 
 GraphicsEngine::~GraphicsEngine()
 {
@@ -29,9 +30,7 @@ bool GraphicsEngine::create(int width, int height)
 	glfwMakeContextCurrent(m_window);
 	glfwSwapInterval(1);
 
-	glewExperimental = GL_TRUE;
-	if (glewInit() != GLEW_OK)
-		return false;
+	gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
 	m_triangle = new TriangleRender();
 	if (!m_triangle)
@@ -65,6 +64,20 @@ void GraphicsEngine::render()
 	m_triangle->draw();
 
 	glfwSwapBuffers(m_window);
+	glfwPollEvents();
+}
+
+void GraphicsEngine::renderToBuffer(char* imageBuffer)
+{
+	int width, height;
+	glfwGetWindowSize(m_window, &width, &height);
+
+	glViewport(0, 0, width, height);
+
+	m_triangle->draw();
+
+	glReadPixels(0, 0, width, height, GL_BGRA, GL_UNSIGNED_BYTE, imageBuffer);
+
 	glfwPollEvents();
 }
 
