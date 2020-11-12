@@ -29,7 +29,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
@@ -148,12 +148,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="GraphicsEngine.cpp" />
     <ClCompile Include="Native.cpp" />
     <ClCompile Include="Source.cpp" />
     <ClCompile Include="TriagleRenderer.cpp" />
     <ClCompile Include="WGLContext.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="GraphicsEngine.h" />
     <ClInclude Include="Native.h" />
     <ClInclude Include="TriangleRenderer.h" />
     <ClInclude Include="WGLContext.h" />
