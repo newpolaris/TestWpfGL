@@ -32,7 +32,7 @@ namespace WGLGraphics
             m_lastUpdate = System::DateTime::Now;
 
             m_renderTimer = gcnew System::Windows::Threading::DispatcherTimer(System::Windows::Threading::DispatcherPriority::Render);
-            m_renderTimer->Interval = System::TimeSpan::FromMilliseconds(16);
+            m_renderTimer->Interval = System::TimeSpan::FromMilliseconds(1);
             m_renderTimer->Tick += gcnew System::EventHandler(this, &WGLGraphics::GLControl::OnTick);
             m_renderTimer->Start();
 

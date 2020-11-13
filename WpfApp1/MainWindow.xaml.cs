@@ -36,8 +36,8 @@ namespace WpfApp1
             var wih = new WindowInteropHelper(this);
             WGLContext.GLCreate(wih.Handle);
 
-            m_renderTimer = new DispatcherTimer(DispatcherPriority.Send);
-            m_renderTimer.Interval = TimeSpan.FromMilliseconds(16);
+            m_renderTimer = new DispatcherTimer(DispatcherPriority.Render);
+            m_renderTimer.Interval = TimeSpan.FromMilliseconds(1);
             m_renderTimer.Tick += new EventHandler(OnTick);
             m_renderTimer.Start();
         }

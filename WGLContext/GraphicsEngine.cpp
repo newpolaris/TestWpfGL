@@ -67,22 +67,53 @@ void GraphicsEngine::render()
 	glfwPollEvents();
 }
 
+GLuint m_fbo = 0;
+GLuint m_colorBuffer = 0, m_depthBuffer = 0;
+int m_width = 0, m_height = 0;
+
 void GraphicsEngine::renderToBuffer(char* imageBuffer)
 {
-	int width, height;
-	glfwGetWindowSize(m_window, &width, &height);
-
-	glViewport(0, 0, width, height);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
+	glViewport(0, 0, m_width, m_height);
 
 	m_triangle->draw();
 
-	glReadPixels(0, 0, width, height, GL_BGRA, GL_UNSIGNED_BYTE, imageBuffer);
+	glReadBuffer(GL_COLOR_ATTACHMENT0);
+	glReadPixels(0, 0, m_width, m_height, GL_BGRA, GL_UNSIGNED_BYTE, imageBuffer);
 
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glfwPollEvents();
 }
 
 void GraphicsEngine::resize(int width, int height)
 {
-	glfwSetWindowSize(m_window, width, height);
+	if (m_width == width && m_height == height)
+		return;
+
+	glDeleteFramebuffers(1, &m_fbo);
+	glDeleteRenderbuffers(1, &m_colorBuffer);
+	glDeleteRenderbuffers(1, &m_depthBuffer);
+	m_fbo = 0;
+	m_colorBuffer = 0;
+	m_depthBuffer = 0;
+
+	glGenFramebuffers(1, &m_fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
+
+	glGenRenderbuffers(1, &m_colorBuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, m_colorBuffer);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, width, height);
+
+	glGenRenderbuffers(1, &m_depthBuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, m_depthBuffer);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
+
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, m_colorBuffer);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthBuffer);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	m_width = width;
+	m_height = height;
 }
 
