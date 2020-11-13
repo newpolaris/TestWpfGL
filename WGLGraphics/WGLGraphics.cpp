@@ -31,7 +31,7 @@ namespace WGLGraphics
 
             m_lastUpdate = System::DateTime::Now;
 
-            m_renderTimer = gcnew System::Windows::Threading::DispatcherTimer(System::Windows::Threading::DispatcherPriority::Render);
+            m_renderTimer = gcnew System::Windows::Threading::DispatcherTimer(System::Windows::Threading::DispatcherPriority::Send);
             m_renderTimer->Interval = System::TimeSpan::FromMilliseconds(1);
             m_renderTimer->Tick += gcnew System::EventHandler(this, &WGLGraphics::GLControl::OnTick);
             m_renderTimer->Start();
@@ -82,7 +82,7 @@ namespace WGLGraphics
         }
 
         m_graphicsEngine->renderToBuffer(m_WriteableBuffer);
-        m_ImageControl->Dispatcher->Invoke(gcnew System::Action(this, &GLControl::UpdateImageData));
+        m_ImageControl->Dispatcher->Invoke(gcnew System::Action(this, &GLControl::UpdateImageData), System::Windows::Threading::DispatcherPriority::Normal);
 
         fpsCounter++;
     }

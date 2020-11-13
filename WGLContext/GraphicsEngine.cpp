@@ -82,7 +82,9 @@ void GraphicsEngine::renderToBuffer(char* imageBuffer)
 	glReadPixels(0, 0, m_width, m_height, GL_BGRA, GL_UNSIGNED_BYTE, imageBuffer);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glfwPollEvents();
+
+	// Wait until resize is finished
+	// glfwPollEvents();
 }
 
 void GraphicsEngine::resize(int width, int height)
