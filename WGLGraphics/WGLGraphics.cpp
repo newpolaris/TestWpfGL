@@ -12,6 +12,7 @@ using namespace System::Windows;
 using namespace System::Windows::Media;
 using namespace System::Windows::Media::Imaging;
 using namespace System::Windows::Controls;
+using namespace System::Windows::Threading;
 
 namespace WGLGraphics
 {
@@ -32,7 +33,7 @@ namespace WGLGraphics
 
             m_lastUpdate = System::DateTime::Now;
 
-            m_renderTimer = gcnew System::Windows::Threading::DispatcherTimer(System::Windows::Threading::DispatcherPriority::Normal);
+            m_renderTimer = gcnew DispatcherTimer(DispatcherPriority::Normal);
             // DispatcherTimer 는 UI Thread 기반, 더 작게 써도 16 ms 정도로 동작함
             m_renderTimer->Interval = System::TimeSpan::FromMilliseconds(10);
             m_renderTimer->Tick += gcnew System::EventHandler(this, &WGLGraphics::GLControl::OnTick);
@@ -94,8 +95,8 @@ namespace WGLGraphics
         // wait until Dispatcher render
 
         // UpdateImageData();
-        // m_ImageControl->Dispatcher->Invoke(gcnew System::Action(this, &GLControl::UpdateImageData), System::Windows::Threading::DispatcherPriority::Normal); // 리사이즈 시 눈아픔. 깜밖임
-        m_ImageControl->Dispatcher->Invoke(gcnew System::Action(this, &GLControl::UpdateImageData), System::Windows::Threading::DispatcherPriority::Render); // 리사이즈 시 그나마 부드러움
+        // m_ImageControl->Dispatcher->Invoke(gcnew System::Action(this, &GLControl::UpdateImageData), DispatcherPriority::Normal); // 리사이즈 시 눈아픔. 깜밖임
+        m_ImageControl->Dispatcher->Invoke(gcnew System::Action(this, &GLControl::UpdateImageData), DispatcherPriority::Render); // 리사이즈 시 그나마 부드러움
 
         fpsCounter++;
     }
