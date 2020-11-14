@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "WGLGraphics.h"
+#include <msclr/lock.h>
 
 #pragma managed(push, off)
 #include "../WGLContext/GraphicsEngine.h"
@@ -31,8 +32,9 @@ namespace WGLGraphics
 
             m_lastUpdate = System::DateTime::Now;
 
-            m_renderTimer = gcnew System::Windows::Threading::DispatcherTimer(System::Windows::Threading::DispatcherPriority::Send);
-            m_renderTimer->Interval = System::TimeSpan::FromMilliseconds(1);
+            m_renderTimer = gcnew System::Windows::Threading::DispatcherTimer(System::Windows::Threading::DispatcherPriority::Normal);
+            // DispatcherTimer 는 UI Thread 기반, 더 작게 써도 16 ms 정도로 동작함
+            m_renderTimer->Interval = System::TimeSpan::FromMilliseconds(10);
             m_renderTimer->Tick += gcnew System::EventHandler(this, &WGLGraphics::GLControl::OnTick);
             m_renderTimer->Start();
 
@@ -54,9 +56,12 @@ namespace WGLGraphics
         }
         
         m_graphicsEngine->resize(_w, _h);
+
         m_writeableImg = gcnew WriteableBitmap(_w, _h, 96, 96, PixelFormats::Pbgra32, nullptr);
         m_WriteableBuffer = (char*)m_writeableImg->BackBuffer.ToPointer();
-        m_ImageControl->Source = m_writeableImg;
+
+        // 여기서 Source를 update 하면, OnTick 을 타서 화면이 칠하기 전인 백색 화면이 표시된다 (왜 흰색인거지?)
+        // m_ImageControl->Source = m_writeableImg;
     }
 
     void GLControl::Destroy(void)
@@ -69,6 +74,9 @@ namespace WGLGraphics
         m_writeableImg->Lock();
         m_writeableImg->AddDirtyRect(Int32Rect(0, 0, _w, _h));
         m_writeableImg->Unlock();
+
+        // texture에 데이터 update 후, 기존 source를 제거
+        m_ImageControl->Source = m_writeableImg;
     }
 
     void GLControl::OnTick(System::Object^ sender, System::EventArgs^ e)
@@ -82,7 +90,12 @@ namespace WGLGraphics
         }
 
         m_graphicsEngine->renderToBuffer(m_WriteableBuffer);
-        m_ImageControl->Dispatcher->Invoke(gcnew System::Action(this, &GLControl::UpdateImageData), System::Windows::Threading::DispatcherPriority::Normal);
+
+        // wait until Dispatcher render
+
+        // UpdateImageData();
+        // m_ImageControl->Dispatcher->Invoke(gcnew System::Action(this, &GLControl::UpdateImageData), System::Windows::Threading::DispatcherPriority::Normal); // 리사이즈 시 눈아픔. 깜밖임
+        m_ImageControl->Dispatcher->Invoke(gcnew System::Action(this, &GLControl::UpdateImageData), System::Windows::Threading::DispatcherPriority::Render); // 리사이즈 시 그나마 부드러움
 
         fpsCounter++;
     }

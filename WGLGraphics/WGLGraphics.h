@@ -21,6 +21,8 @@ namespace WGLGraphics {
 		System::Windows::Controls::Image^ m_ImageControl;
 		System::Windows::Media::Imaging::WriteableBitmap^ m_writeableImg;
 
+		Object^ m_lock = gcnew Object();
+
         void OnTick(System::Object^ sender, System::EventArgs^ e);
         void UpdateImageData();
 
