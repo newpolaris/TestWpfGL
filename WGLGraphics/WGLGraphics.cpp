@@ -47,7 +47,7 @@ namespace WGLGraphics
             System::Windows::Controls::Panel::SetZIndex(m_ImageControl, -1);
 
             m_graphicsEngine = new GraphicsEngine();
-			m_graphicsEngine->create(_w, _h, false);
+			m_graphicsEngine->create(1, 1, false);
 
             isInitialized = true;
         }
