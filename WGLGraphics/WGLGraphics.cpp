@@ -77,6 +77,7 @@ namespace WGLGraphics
         m_writeableImg->Unlock();
 
         // texture에 데이터 update 후, 기존 source를 제거
+        // OnTick 에서는 m_ImageControl의 Drawy 호출이 상관 없으므로 순서 관계 없을 듯
         m_ImageControl->Source = m_writeableImg;
     }
 
@@ -85,20 +86,25 @@ namespace WGLGraphics
         System::TimeSpan elaped = (System::DateTime::Now - m_lastUpdate);
         if (elaped.TotalMilliseconds >= 1000)
         {
-            m_fpsCounter->Text = "FPS= " + fpsCounter.ToString();
+            m_fpsCounter->Text = "FPS= " + fpsCounter.ToString() + " / frametime: " + frameTime.ToString() + " ms";
             fpsCounter = 0;
             m_lastUpdate = System::DateTime::Now;
         }
 
+        stopwatch->Restart();
+        // 3 ms ~ 10 ms (fullscreen) due to glReadpixel
         m_graphicsEngine->renderToBuffer(m_WriteableBuffer);
+        stopwatch->Stop();
 
-        // wait until Dispatcher render
-
-        // UpdateImageData();
-        // m_ImageControl->Dispatcher->Invoke(gcnew System::Action(this, &GLControl::UpdateImageData), DispatcherPriority::Normal); // 리사이즈 시 눈아픔. 깜밖임
-        m_ImageControl->Dispatcher->Invoke(gcnew System::Action(this, &GLControl::UpdateImageData), DispatcherPriority::Render); // 리사이즈 시 그나마 부드러움
+        // ~ 0.1 ms
+        // 3개 다 그럭저럭 동작함, 감빡이는 정도는 다시 테스트 해봐야하겠지만, 느껴지지 않음
+        UpdateImageData();
+        // m_ImageControl->Dispatcher->Invoke(gcnew System::Action(this, &GLControl::UpdateImageData), DispatcherPriority::Normal);
+        // m_ImageControl->Dispatcher->Invoke(gcnew System::Action(this, &GLControl::UpdateImageData), DispatcherPriority::Render); 
 
         fpsCounter++;
+
+        frameTime = stopwatch->Elapsed.TotalMilliseconds;
     }
 
 }

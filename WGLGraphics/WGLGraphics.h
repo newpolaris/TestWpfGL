@@ -1,6 +1,7 @@
 #pragma once
 
 using namespace System;
+using namespace System::Diagnostics;
 
 class GraphicsEngine;
 
@@ -13,7 +14,9 @@ namespace WGLGraphics {
 		System::Windows::Threading::DispatcherTimer^ m_renderTimer;
         System::Windows::Controls::TextBlock^ m_fpsCounter;
 		System::DateTime m_lastUpdate;
-;
+
+		Stopwatch^ stopwatch = gcnew Stopwatch();
+		double frameTime = 0.0;
 
 		char* m_WriteableBuffer;
 		bool m_isRunning;
