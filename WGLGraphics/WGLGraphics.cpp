@@ -1,6 +1,6 @@
 #include "pch.h"
-
 #include "WGLGraphics.h"
+
 #include <msclr/lock.h>
 
 #pragma managed(push, off)

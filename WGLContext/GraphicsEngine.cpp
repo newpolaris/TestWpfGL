@@ -70,6 +70,7 @@ bool GraphicsEngineImpl::create(int width, int height, bool isVisible)
 	WndClass.lpszClassName = lpszClass;
 	RegisterClass(&WndClass);
 
+	// create minimal window
 	m_hWindow = CreateWindow(lpszClass, TEXT("dummy"), WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_POPUP,
 		0, 0, width, height,
 		NULL, (HMENU)NULL, 0, NULL);
