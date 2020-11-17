@@ -1,6 +1,6 @@
 #include "pch.h"
-
 #include "WGLGraphics.h"
+
 #include <msclr/lock.h>
 
 #pragma managed(push, off)
@@ -16,9 +16,6 @@ using namespace System::Windows::Threading;
 
 namespace WGLGraphics
 {
-    int _w = 0, _h = 0, fpsCounter = 0;
-	bool isInitialized = false;
-
     void WGLGraphics::GLControl::OnRenderSizeChanged(System::Windows::SizeChangedInfo^ info)
     {
         _w = (int)info->NewSize.Width;
@@ -51,7 +48,7 @@ namespace WGLGraphics
             System::Windows::Controls::Panel::SetZIndex(m_ImageControl, -1);
 
             m_graphicsEngine = new GraphicsEngine();
-			m_graphicsEngine->create(_w, _h);
+			m_graphicsEngine->create(1, 1, false);
 
             isInitialized = true;
         }

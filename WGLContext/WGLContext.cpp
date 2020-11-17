@@ -9,6 +9,8 @@
 #include <vector>
 
 #pragma comment(lib, "opengl32.lib")
+#pragma comment(lib, "Gdi32.lib")
+#pragma comment(lib, "user32.lib") 
 
 HGLRC GLContextCreate(HDC hDC) {
 	if (hDC == NULL)

@@ -15,6 +15,10 @@ namespace WGLGraphics {
         System::Windows::Controls::TextBlock^ m_fpsCounter;
 		System::DateTime m_lastUpdate;
 
+		double frametime;
+		int _w = 0, _h = 0, fpsCounter = 0;
+		bool isInitialized = false;
+
 		Stopwatch^ stopwatch = gcnew Stopwatch();
 		double frameTime = 0.0;
 

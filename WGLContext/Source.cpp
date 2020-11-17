@@ -5,7 +5,7 @@
 int main()
 {
 	auto window = std::make_unique<GraphicsEngine>();
-	if (!window->create(640, 480))
+	if (!window->create(640, 480, true))
 		return -1;
 
 	while (true) 
