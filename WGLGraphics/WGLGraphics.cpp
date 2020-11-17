@@ -15,9 +15,6 @@ using namespace System::Windows::Controls;
 
 namespace WGLGraphics
 {
-    int _w = 0, _h = 0, fpsCounter = 0;
-	bool isInitialized = false;
-
     void WGLGraphics::GLControl::OnRenderSizeChanged(System::Windows::SizeChangedInfo^ info)
     {
         _w = (int)info->NewSize.Width;
@@ -50,7 +47,7 @@ namespace WGLGraphics
             System::Windows::Controls::Panel::SetZIndex(m_ImageControl, -1);
 
             m_graphicsEngine = new GraphicsEngine();
-			m_graphicsEngine->create(_w, _h);
+			m_graphicsEngine->create(_w, _h, false);
 
             isInitialized = true;
         }
@@ -84,7 +81,7 @@ namespace WGLGraphics
         System::TimeSpan elaped = (System::DateTime::Now - m_lastUpdate);
         if (elaped.TotalMilliseconds >= 1000)
         {
-            m_fpsCounter->Text = "FPS= " + fpsCounter.ToString();
+            m_fpsCounter->Text = "FPS= " + fpsCounter.ToString() + " / frameTime " + frametime.ToString();
             fpsCounter = 0;
             m_lastUpdate = System::DateTime::Now;
         }

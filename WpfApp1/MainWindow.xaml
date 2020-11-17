@@ -24,6 +24,13 @@
                 </ListView.Items>
             </ListView>
         </Grid>
-        <gl:GLControl Grid.Column="0" Grid.ColumnSpan="2" />
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <Grid Grid.Column="0"><gl:GLControl></gl:GLControl></Grid>
+            <Grid Grid.Column="1"><gl:GLControl></gl:GLControl></Grid>
+        </Grid>
     </Grid>
 </Window>
