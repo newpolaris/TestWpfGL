@@ -14,6 +14,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WGLContext", "WGLContext\WG
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dxgl", "dxgl\dxgl.vcxproj", "{A3F53BF0-7114-4B84-962A-CC5556C61520}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{A48DD224-061D-40E0-8A10-36280126F20D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "D3DImageSample", "D3DImageSample\D3DImageSample.csproj", "{C8281332-29FF-434A-9233-E1A51D767853}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -72,9 +76,25 @@ Global
 		{A3F53BF0-7114-4B84-962A-CC5556C61520}.Release|x64.Build.0 = Release|x64
 		{A3F53BF0-7114-4B84-962A-CC5556C61520}.Release|x86.ActiveCfg = Release|Win32
 		{A3F53BF0-7114-4B84-962A-CC5556C61520}.Release|x86.Build.0 = Release|Win32
+		{C8281332-29FF-434A-9233-E1A51D767853}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8281332-29FF-434A-9233-E1A51D767853}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8281332-29FF-434A-9233-E1A51D767853}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C8281332-29FF-434A-9233-E1A51D767853}.Debug|x64.Build.0 = Debug|Any CPU
+		{C8281332-29FF-434A-9233-E1A51D767853}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C8281332-29FF-434A-9233-E1A51D767853}.Debug|x86.Build.0 = Debug|Any CPU
+		{C8281332-29FF-434A-9233-E1A51D767853}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8281332-29FF-434A-9233-E1A51D767853}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8281332-29FF-434A-9233-E1A51D767853}.Release|x64.ActiveCfg = Release|Any CPU
+		{C8281332-29FF-434A-9233-E1A51D767853}.Release|x64.Build.0 = Release|Any CPU
+		{C8281332-29FF-434A-9233-E1A51D767853}.Release|x86.ActiveCfg = Release|Any CPU
+		{C8281332-29FF-434A-9233-E1A51D767853}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A3F53BF0-7114-4B84-962A-CC5556C61520} = {A48DD224-061D-40E0-8A10-36280126F20D}
+		{C8281332-29FF-434A-9233-E1A51D767853} = {A48DD224-061D-40E0-8A10-36280126F20D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E4971FCD-DFD1-4051-BD34-23B6B7FF91E8}

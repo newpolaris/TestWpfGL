@@ -112,11 +112,6 @@ static void Create(HWND window)
     DXGI_SWAP_CHAIN_DESC desc = {
         .BufferDesc =
         {
-            .RefreshRate =
-            {
-                .Numerator = 60,
-                .Denominator = 1,
-            },
             .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
         },
         .SampleDesc =
