@@ -1,6 +1,7 @@
 #pragma once
 
 using namespace System;
+using namespace System::Diagnostics;
 
 class GraphicsEngine;
 
@@ -17,6 +18,9 @@ namespace WGLGraphics {
 		double frametime;
 		int _w = 0, _h = 0, fpsCounter = 0;
 		bool isInitialized = false;
+
+		Stopwatch^ stopwatch = gcnew Stopwatch();
+		double frameTime = 0.0;
 
 		char* m_WriteableBuffer;
 		bool m_isRunning;

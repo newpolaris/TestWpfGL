@@ -139,11 +139,6 @@
       <Name>WGLGraphics</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="WGLContext.pdb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>
