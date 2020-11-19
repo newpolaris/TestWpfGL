@@ -148,7 +148,7 @@ namespace D3DImageSample
                 // a no-op. There is no performance penalty.
                 // d3dimg.SetBackBuffer(D3DResourceType.IDirect3DSurface9, pSurface);
 
-                _device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, 0, 1.0f, 0);
+                _device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, new Color4(System.Drawing.Color.Red), 1.0f, 0);
                 _device.BeginScene();
                 _device.EndScene();
 

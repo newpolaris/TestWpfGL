@@ -8,7 +8,9 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        <Image x:Name="imagelt">
+        <Grid x:Name="background" Background="Aquamarine" Panel.ZIndex="1"></Grid>
+        <Image Source="{DynamicResource ImageSource1}" Panel.ZIndex="3"></Image>
+        <Image x:Name="container" Panel.ZIndex="2">
             <Image.Source>
                 <i:D3DImage x:Name="d3dimg"></i:D3DImage>
             </Image.Source>

@@ -4,6 +4,6 @@
              xmlns:local="clr-namespace:D3DImageSample"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <BitmapImage x:Key="ImageSource1" CreateOptions="IgnoreImageCache" CacheOption="OnLoad" UriSource="image.jpg"/>
     </Application.Resources>
 </Application>
