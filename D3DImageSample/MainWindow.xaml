@@ -5,15 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:i="clr-namespace:System.Windows.Interop;assembly=PresentationCore"
         xmlns:local="clr-namespace:D3DImageSample"
+        xmlns:my="clr-namespace:D3DImageSample"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
         <Grid x:Name="background" Background="Aquamarine" Panel.ZIndex="1"></Grid>
         <Image Source="{DynamicResource ImageSource1}" Panel.ZIndex="3"></Image>
-        <Image x:Name="container" Panel.ZIndex="2">
-            <Image.Source>
-                <i:D3DImage x:Name="d3dimg"></i:D3DImage>
-            </Image.Source>
-        </Image>
+        <my:DXControl x:Name="fastGLControl1" Panel.ZIndex="2"/> 
     </Grid>
 </Window>
