@@ -33,13 +33,6 @@ namespace WpfApp1
 
         public void SetupRender()
         {
-            var wih = new WindowInteropHelper(this);
-            WGLContext.GLCreate(wih.Handle);
-
-            m_renderTimer = new DispatcherTimer(DispatcherPriority.Render);
-            m_renderTimer.Interval = TimeSpan.FromMilliseconds(1);
-            m_renderTimer.Tick += new EventHandler(OnTick);
-            m_renderTimer.Start();
         }
 
         public void OnTick(Object sender, EventArgs e)
