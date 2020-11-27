@@ -22,6 +22,8 @@ ImageControl::ImageControl()
 	Loaded += gcnew RoutedEventHandler(this, &ImageControl::executeStartRendering);
 	SizeChanged += gcnew SizeChangedEventHandler(this, &ImageControl::FastGLControl_SizeChanged);
 	Dispatcher->ShutdownStarted += gcnew System::EventHandler(this, &ImageControl::OnShutdownStarted);
+
+	m_dxglRender = new DxGLRender();
 }
 
 void ImageControl::IsFrontBufferAvailableChanged(Object^ sender, DependencyPropertyChangedEventArgs e)
@@ -36,6 +38,7 @@ void ImageControl::IsFrontBufferAvailableChanged(Object^ sender, DependencyPrope
 
 void ImageControl::executeStartRendering(Object^ sender, RoutedEventArgs^ args)
 {
+	StartRendering();
 }
 
 void ImageControl::OnShutdownStarted(Object^ sender, EventArgs^ args)
@@ -45,36 +48,50 @@ void ImageControl::OnShutdownStarted(Object^ sender, EventArgs^ args)
 
 void ImageControl::OnRenderOpenGL(Object^ sender, EventArgs^ e)
 {
+	m_dxglRender->render();
+
+	d3dimg->Lock();
+	d3dimg->AddDirtyRect(Int32Rect(0, 0, d3dimg->PixelWidth, d3dimg->PixelHeight));
+	d3dimg->Unlock();
 }
 
 void ImageControl::FastGLControl_SizeChanged(Object^ sender, SizeChangedEventArgs^ args)
 {
+	ResizeRendering();
 }
 
 void ImageControl::Destroy(void)
 {
 }
 
-void ImageControl::OnRenderSizeChanged(System::Windows::SizeChangedInfo^ info)
+void DXControl::ImageControl::OnRenderSizeChanged(System::Windows::SizeChangedInfo^ info)
 {
 }
 
 void ImageControl::ResizeRendering()
 {
-	double NewWidth = ActualWidth;
-	double NewHeight = ActualHeight;
+	m_dxglRender->resize(ActualWidth, ActualHeight);
+	void* pSurface = m_dxglRender->getBackBuffer();
 
 	d3dimg->Lock();
-	// d3dimg->SetBackBuffer(D3DResourceType::IDirect3DSurface9,  )
+	d3dimg->SetBackBuffer(D3DResourceType::IDirect3DSurface9, IntPtr(pSurface));
 	d3dimg->Unlock();
 }
 
 void ImageControl::StartRendering()
 {
+	if (!m_dxglRender->create())
+		throw gcnew InvalidOperationException("Create failure");
+
+	// 
+	ResizeRendering();
+
 	CompositionTarget::Rendering += gcnew EventHandler(this, &ImageControl::OnRenderOpenGL);
 }
 
 void ImageControl::StopRendering()
 {
 	CompositionTarget::Rendering -= gcnew EventHandler(this, &ImageControl::OnRenderOpenGL);
+
+	m_dxglRender->destroy();
 }

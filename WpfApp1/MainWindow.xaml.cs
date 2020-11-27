@@ -23,7 +23,6 @@ namespace WpfApp1
     /// </summary>
     public partial class MainWindow : Window
     {
-        DispatcherTimer m_renderTimer;
         public MainWindow()
         {
             InitializeComponent();

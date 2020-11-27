@@ -84,14 +84,11 @@ public:
 	void resize(int width, int height);
 	void render();
 
-	bool initialize(HWND hWnd);
-	void cleanup();
+	bool create();
+	void destroy();
 
 	IDirect3D9Ex* m_pD3D = NULL; // Used to create the D3DDevice
 	IDirect3DDevice9Ex* m_pd3dDevice = NULL; // Our rendering device
-	IDirect3DSwapChain9* m_swapChain = NULL;
-	IDirect3DSurface9* m_backBufferColor = NULL;
-	IDirect3DSurface9* m_backBufferDepthStencil = NULL;
 
 	// create the Direct3D render targets
 	IDirect3DSurface9* m_dxColorBuffer = NULL;
@@ -119,18 +116,6 @@ void DxGLRenderImpl::onPreReset()
 		m_glTextureHandles[0] = 0;
 		m_glTextureHandles[1] = 0;
 	}
-	if (m_backBufferColor) {
-		m_backBufferColor->Release();
-		m_backBufferColor = NULL;
-	}
-	if (m_backBufferDepthStencil) {
-		m_backBufferDepthStencil->Release();
-		m_backBufferDepthStencil = NULL;
-	}
-	if (m_swapChain) {
-		m_swapChain->Release();
-		m_swapChain = NULL;
-	}
 	if (m_dxColorBuffer) {
 		m_dxColorBuffer->Release();
 		m_dxColorBuffer = NULL;
@@ -143,12 +128,6 @@ void DxGLRenderImpl::onPreReset()
 
 bool DxGLRenderImpl::onPostReset()
 {
-	// swapchain은 ResetEx 여부와 관계 없이 유지되는 듯
-	DX_CHECK(m_pd3dDevice->GetSwapChain(0, &m_swapChain));
-	// ResetEx 이후 갱신 필요함
-	DX_CHECK(m_swapChain->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &m_backBufferColor));
-	DX_CHECK(m_pd3dDevice->GetDepthStencilSurface(&m_backBufferDepthStencil));
-
 	UINT width = m_d3dpp.BackBufferWidth;
 	UINT height = m_d3dpp.BackBufferHeight;
 	bool lockable = false;
@@ -199,7 +178,7 @@ bool DxGLRenderImpl::onPostReset()
 	return true;
 }
 
-void DxGLRenderImpl::cleanup()
+void DxGLRenderImpl::destroy()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -261,8 +240,6 @@ void DxGLRenderImpl::resize(int width, int height)
 	glViewport(0, 0, m_d3dpp.BackBufferWidth, m_d3dpp.BackBufferHeight);
 }
 
-LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
 static void APIENTRY DebugCallback(GLenum source, GLenum type, GLuint id,
 	GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
 {
@@ -270,10 +247,32 @@ static void APIENTRY DebugCallback(GLenum source, GLenum type, GLuint id,
 	OutputDebugStringA("\n");
 }
 
-bool DxGLRenderImpl::initialize(HWND hWnd)
+LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	m_hWnd = CreateWindowA("STATIC", "temp", 0, 0, 0, 0, 0, 0, 0, 0, 0);
+	return DefWindowProc(hWnd, msg, wParam, lParam);
+}
+
+bool DxGLRenderImpl::create()
+{
+	// Register the window class
+	WNDCLASSEX wc =
+	{
+		// https://stackoverflow.com/a/32806642/1890382
+		sizeof(WNDCLASSEX), CS_HREDRAW | CS_VREDRAW | CS_OWNDC, MsgProc, 0L, 0L,
+		GetModuleHandle(NULL), NULL, NULL, NULL, NULL,
+		L"D3D Tutorial", NULL
+	};
+	RegisterClassEx(&wc);
+
+	// Create the application's window
+	HWND hWnd = CreateWindow(L"D3D Tutorial", L"D3D Tutorial 02: Vertices",
+		WS_OVERLAPPEDWINDOW, 100, 100, 300, 300,
+		NULL, NULL, wc.hInstance, NULL);
+
+	m_hWnd = hWnd; //  CreateWindowA("STATIC", "temp", 0, 0, 0, 100, 100, 0, 0, 0, 0);
 	assert(m_hWnd);
+
+	// System::Windows::Interop::Hw
 
 	/*
 	 * IDirect3D9Ex device is required.
@@ -303,11 +302,12 @@ bool DxGLRenderImpl::initialize(HWND hWnd)
 	m_d3dpp.AutoDepthStencilFormat = D3DFMT_D24S8;
 
 	// Create the D3DDevice
-	if (FAILED(m_pD3D->CreateDeviceEx(
-		D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd,
+	HRESULT hr = S_OK;
+	if (FAILED(hr = (m_pD3D->CreateDeviceEx(
+		D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
 		D3DCREATE_HARDWARE_VERTEXPROCESSING |
 		D3DCREATE_PUREDEVICE | D3DCREATE_MULTITHREADED,
-		&m_d3dpp, NULL, &m_pd3dDevice)))
+		&m_d3dpp, NULL, &m_pd3dDevice))))
 	{
 		return false;
 	}
@@ -356,107 +356,8 @@ void DxGLRenderImpl::render()
 		wglDXUnlockObjectsNV(m_glD3DHandle, 2, m_glTextureHandles);
 	}
 
-	// just set back to screen surface
-	m_pd3dDevice->SetRenderTarget(0, m_backBufferColor);
-
 	// copy rendertarget to backbuffer
-	m_pd3dDevice->StretchRect(m_dxColorBuffer, NULL, m_backBufferColor, NULL, D3DTEXF_NONE);
-
-	// https://stackoverflow.com/questions/61915988/how-to-handle-direct3d-9ex-d3derr-devicehung-error
-	// https://docs.microsoft.com/en-us/windows/win32/api/d3d9/nf-d3d9-idirect3ddevice9ex-checkdevicestate
-	// We recommend not to call CheckDeviceState every frame. Instead, call CheckDeviceState only 
-	// if the IDirect3DDevice9Ex::PresentEx method returns a failure code.
-	HRESULT hr = m_pd3dDevice->PresentEx(NULL, NULL, NULL, NULL, 0);
-	if (FAILED(hr))
-	{
-		onPreReset();
-
-		hr = m_pd3dDevice->CheckDeviceState(nullptr);
-
-		// 복잡한 예외 처리 방법은 아래 참조:
-		// https://github.com/google/angle/blob/master/src/libANGLE/renderer/d3d/d3d9/Renderer9.cpp
-		for (int attempts = 5; attempts > 0; attempts--)
-		{
-			// TODO: Device removed, which may trigger on driver reinstallation
-			assert(hr != D3DERR_DEVICEREMOVED);
-
-			Sleep(500);
-			DX_CHECK(m_pd3dDevice->ResetEx(&m_d3dpp, NULL));
-			if (SUCCEEDED(m_pd3dDevice->CheckDeviceState(nullptr)))
-				break;
-		}
-
-		onPostReset();
-	}
-}
-
-DxGLRenderImpl dxgl;
-
-LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-	switch (msg)
-	{
-	case WM_PAINT:
-		dxgl.render();
-		break;
-
-	case WM_SIZE:
-		dxgl.resize(LOWORD(lParam), HIWORD(lParam));
-		return 0;
-
-	case WM_DESTROY:
-		dxgl.cleanup();
-		PostQuitMessage(0);
-		return 0;
-	}
-	return DefWindowProc(hWnd, msg, wParam, lParam);
-}
-
-int main()
-{
-	// Register the window class
-	WNDCLASSEX wc =
-	{
-		// https://stackoverflow.com/a/32806642/1890382
-		sizeof(WNDCLASSEX), CS_HREDRAW | CS_VREDRAW | CS_OWNDC, MsgProc, 0L, 0L,
-		GetModuleHandle(NULL), NULL, NULL, NULL, NULL,
-		L"D3D Tutorial", NULL
-	};
-	RegisterClassEx(&wc);
-
-	// Create the application's window
-	HWND hWnd = CreateWindow(L"D3D Tutorial", L"D3D Tutorial 02: Vertices",
-		WS_OVERLAPPEDWINDOW, 100, 100, 300, 300,
-		NULL, NULL, wc.hInstance, NULL);
-
-	if (SUCCEEDED(dxgl.initialize(hWnd)))
-	{
-		// Create the vertex buffer
-		if (TRUE)
-		{
-			// Show the window
-			ShowWindow(hWnd, SW_SHOWDEFAULT);
-			UpdateWindow(hWnd);
-
-			// Enter the message loop
-			MSG msg;
-			ZeroMemory(&msg, sizeof(msg));
-			while (msg.message != WM_QUIT)
-			{
-				if (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
-				{
-					TranslateMessage(&msg);
-					DispatchMessage(&msg);
-				}
-				else {
-					dxgl.render();
-				}
-			}
-		}
-	}
-	UnregisterClass(L"D3D Tutorial", wc.hInstance);
-
-	return 0;
+	// m_pd3dDevice->StretchRect(m_dxColorBuffer, NULL, m_backBufferColor, NULL, D3DTEXF_NONE);
 }
 
 DxGLRender::DxGLRender() :
@@ -468,4 +369,33 @@ DxGLRender::~DxGLRender()
 {
 	delete m_pImpl;
 	m_pImpl = nullptr;
+}
+
+bool DxGLRender::create()
+{
+	assert(m_pImpl);
+	return m_pImpl->create();
+}
+
+void DxGLRender::destroy()
+{
+	assert(m_pImpl);
+	m_pImpl->destroy();
+}
+
+void DxGLRender::resize(int width, int height)
+{
+	assert(m_pImpl);
+	m_pImpl->resize(width, height);
+}
+
+void DxGLRender::render()
+{
+	assert(m_pImpl);
+	m_pImpl->render();
+}
+
+void* DxGLRender::getBackBuffer() const
+{
+	return m_pImpl->m_dxColorBuffer;
 }
