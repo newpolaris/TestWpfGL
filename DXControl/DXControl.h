@@ -17,6 +17,7 @@ namespace DXControl {
 		void FastGLControl_SizeChanged(Object^ sender, SizeChangedEventArgs^ args);
 		void OnShutdownStarted(Object^ sender, EventArgs^ args);
 		void OnRenderOpenGL(Object^ sender, EventArgs^ e);
+		void IsFrontBufferAvailableChanged(Object^ sender, DependencyPropertyChangedEventArgs e);
 
 		void ResizeRendering();
 		void StartRendering();

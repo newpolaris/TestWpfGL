@@ -1,8 +1,7 @@
 #include "WGLContext.h"
 
 #include <glad/glad.h>
-#include <GL/wgl.h>
-#include <GL/wglext.h>
+#include <glad/glad_wgl.h>
 
 #include <string>
 #include <sstream>
@@ -49,7 +48,7 @@ HGLRC GLContextCreate(HDC hDC) {
 
 	const int major = 4;
 	const int minor = 3;
-	const int profile = WGL_CONTEXT_CORE_PROFILE_BIT_ARB;
+	const int profile = WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB;
 	static const int att[] = {
 		WGL_CONTEXT_MAJOR_VERSION_ARB, major,
 		WGL_CONTEXT_MINOR_VERSION_ARB, minor,
@@ -166,7 +165,11 @@ bool WGLContext::create(HWND hWnd) {
 	if (m_hRC == NULL)
 		return false;
 
-	gladLoadGL();
+	if (!gladLoadGL())
+		return false;
+
+	if (!gladLoadWGL(m_hDC))
+		return false;
 
 	// check list "http://glew.sourceforge.net/basic.html"
 	// use arb instead https://github.com/openwebos/qt/blob/master/src/opengl/qglextensions.cpp
@@ -186,6 +189,16 @@ bool WGLContext::create(HWND hWnd) {
 
 void WGLContext::destory()
 {
+	if (m_hRC) {
+		wglMakeCurrent(0, 0);
+		wglDeleteContext(m_hRC);
+		m_hRC = 0;
+	}
+	if (m_hDC) {
+		ReleaseDC(m_hWnd, m_hDC);
+		m_hDC = 0;
+	}
+	m_hWnd = 0;
 }
 
 void WGLContext::makeCurrent()

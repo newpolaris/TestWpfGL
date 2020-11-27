@@ -331,7 +331,7 @@ int main()
             glVertex2f(-0.5f, 0.5f);
             glEnd();
 
-            glBindFramebuffer(GL_FRAMEBUFFER, fbuf);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
 
         wglDXUnlockObjectsNV(dxDevice, _countof(dxObjects), dxObjects);

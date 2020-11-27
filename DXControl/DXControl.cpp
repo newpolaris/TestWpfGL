@@ -10,9 +10,24 @@ using namespace System::Windows::Media;
 
 ImageControl::ImageControl()
 {
+	d3dimg = gcnew D3DImage();
+	d3dimg->IsFrontBufferAvailableChanged += gcnew DependencyPropertyChangedEventHandler(this, &ImageControl::IsFrontBufferAvailableChanged);
+
+	Background = gcnew ImageBrush(d3dimg);
+
 	Loaded += gcnew RoutedEventHandler(this, &ImageControl::executeStartRendering);
 	SizeChanged += gcnew SizeChangedEventHandler(this, &ImageControl::FastGLControl_SizeChanged);
 	Dispatcher->ShutdownStarted += gcnew System::EventHandler(this, &ImageControl::OnShutdownStarted);
+}
+
+void ImageControl::IsFrontBufferAvailableChanged(Object^ sender, DependencyPropertyChangedEventArgs e)
+{
+	if (d3dimg->IsFrontBufferAvailable)
+	{
+	}
+	else
+	{
+	}
 }
 
 void ImageControl::executeStartRendering(Object^ sender, RoutedEventArgs^ args)
@@ -21,6 +36,7 @@ void ImageControl::executeStartRendering(Object^ sender, RoutedEventArgs^ args)
 
 void ImageControl::OnShutdownStarted(Object^ sender, EventArgs^ args)
 {
+	StopRendering();
 }
 
 void ImageControl::OnRenderOpenGL(Object^ sender, EventArgs^ e)
@@ -49,7 +65,7 @@ void ImageControl::ResizeRendering()
 	double NewHeight = ActualHeight;
 
 	d3dimg->Lock();
-	// d3dimg->SetBackBuffer(System::Windows::Interop::D3DResourceType::IDirect3DSurface9, )
+	// d3dimg->SetBackBuffer(D3DResourceType::IDirect3DSurface9,  )
 	d3dimg->Unlock();
 }
 
