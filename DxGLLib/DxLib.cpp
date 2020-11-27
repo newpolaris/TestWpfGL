@@ -8,6 +8,7 @@
 #include <cassert>
 
 #include <WGLContext.h>
+#include <TriangleRenderer.h>
 
 #pragma comment(lib, "d3d9.lib")
 #pragma comment(lib, "opengl32.lib")
@@ -77,6 +78,8 @@ HRESULT DX_CHECK(HRESULT hr) {
 
 static WGLContext* g_glContext = nullptr;
 
+class TriangleRender;
+
 struct DxGLRenderImpl
 {
 public:
@@ -104,6 +107,8 @@ public:
 	HANDLE m_glTextureHandles[2] = { 0, 0 };
 	GLuint m_glTextures[2] = { 0, 0 };
 	GLuint m_glFBO = 0;
+
+	TriangleRender* m_triangle = nullptr;
 };
 
 void DxGLRenderImpl::onPreReset()
@@ -185,6 +190,12 @@ bool DxGLRenderImpl::onPostReset()
 void DxGLRenderImpl::destroy()
 {
 	g_glContext->makeCurrent();
+
+	if (m_triangle) {
+		m_triangle->destroy();
+		delete m_triangle;
+		m_triangle = nullptr;
+	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -326,6 +337,12 @@ bool DxGLRenderImpl::create()
 			return false;
 	}
 
+	m_triangle = new TriangleRender();
+	if (!m_triangle)
+		return false;
+	if (!m_triangle->create())
+		return false;
+
 	// register the Direct3D device with GL
 	m_glD3DHandle = wglDXOpenDeviceNV(m_pd3dDevice);
 	assert(m_glD3DHandle);
@@ -347,20 +364,9 @@ void DxGLRenderImpl::render()
 		wglDXLockObjectsNV(m_glD3DHandle, 2, m_glTextureHandles);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, m_glFBO);
-		{
-			glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-			glClearDepth(1.0f);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
-			glShadeModel(GL_SMOOTH);
-			glBegin(GL_TRIANGLES);
-			glColor3f(1, 0, 0);
-			glVertex2f(0.f, -0.5f);
-			glColor3f(0, 1, 0);
-			glVertex2f(0.5f, 0.5f);
-			glColor3f(0, 0, 1);
-			glVertex2f(-0.5f, 0.5f);
-			glEnd();
-		}
+		
+		m_triangle->draw();
+		
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		// unlock the render targets

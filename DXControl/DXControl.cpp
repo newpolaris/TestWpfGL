@@ -18,7 +18,17 @@ ImageControl::ImageControl()
 	d3dimg = gcnew D3DImage();
 	d3dimg->IsFrontBufferAvailableChanged += gcnew DependencyPropertyChangedEventHandler(this, &ImageControl::IsFrontBufferAvailableChanged);
 
-	Background = gcnew ImageBrush(d3dimg);
+	RotateTransform^ s = gcnew RotateTransform();
+	s->CenterX = 0.5;
+	s->CenterY = 0.5;
+	s->Angle = 180;
+	
+	TransformGroup^ tg = gcnew TransformGroup();
+	tg->Children->Add(s);
+	
+	ImageBrush^ brush = gcnew ImageBrush(d3dimg);
+	brush->RelativeTransform = tg;
+	Background = brush;
 
 	Loaded += gcnew RoutedEventHandler(this, &ImageControl::executeStartRendering);
 	SizeChanged += gcnew SizeChangedEventHandler(this, &ImageControl::OnSizeChanged);
