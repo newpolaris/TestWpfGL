@@ -94,6 +94,8 @@ bool GraphicsEngineImpl::create(int width, int height, bool isVisible)
 void GraphicsEngineImpl::destroy()
 {
 	if (m_triangle) {
+		context->makeCurrent();
+		m_triangle->destroy();
 		delete m_triangle;
 		m_triangle = nullptr;
 	}
@@ -124,6 +126,8 @@ void GraphicsEngineImpl::render()
 
 void GraphicsEngineImpl::renderToBuffer(char* imageBuffer)
 {
+	context->makeCurrent();
+
 	glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
 	glViewport(0, 0, m_width, m_height);
 
@@ -139,6 +143,8 @@ void GraphicsEngineImpl::resize(int width, int height)
 {
 	if (m_width == width && m_height == height)
 		return;
+
+	context->makeCurrent();
 
 	glDeleteFramebuffers(1, &m_fbo);
 	glDeleteRenderbuffers(1, &m_colorBuffer);

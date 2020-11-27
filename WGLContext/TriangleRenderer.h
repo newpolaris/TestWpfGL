@@ -11,6 +11,8 @@ public:
 	bool create();
 	bool createGeometry();
 	bool createProgram();
+	void destroy();
+
 	void draw();
 
 	GLuint createShader(GLenum type, const char* shaderCode);

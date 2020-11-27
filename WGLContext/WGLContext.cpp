@@ -204,11 +204,6 @@ void WGLContext::destory()
 void WGLContext::makeCurrent()
 {
 	wglMakeCurrent(m_hDC, m_hRC);
-
-    RECT rc;
-    GetClientRect(m_hWnd, &rc);
-
-	glViewport(0, 0, rc.right - rc.left, rc.bottom - rc.top);
 }
 
 void WGLContext::present()

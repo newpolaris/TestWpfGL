@@ -87,6 +87,11 @@ bool TriangleRender::createProgram()
     return true;
 }
 
+void TriangleRender::destroy()
+{
+    // TODO: remove resources
+}
+
 void TriangleRender::draw()
 {
 	static float c = 0.f;
