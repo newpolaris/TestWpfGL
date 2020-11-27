@@ -13,9 +13,10 @@ namespace DXControl {
 
 		System::Windows::Interop::D3DImage^ d3dimg;
 		DxGLRender* m_dxglRender;
+		bool m_bOnResizing = false;
 
 		void executeStartRendering(Object^ sender, RoutedEventArgs^ args);
-		void FastGLControl_SizeChanged(Object^ sender, SizeChangedEventArgs^ args);
+		void OnSizeChanged(Object^ sender, SizeChangedEventArgs^ args);
 		void OnShutdownStarted(Object^ sender, EventArgs^ args);
 		void OnRenderOpenGL(Object^ sender, EventArgs^ e);
 		void IsFrontBufferAvailableChanged(Object^ sender, DependencyPropertyChangedEventArgs e);
@@ -29,7 +30,5 @@ namespace DXControl {
 		ImageControl();
 
 		void Destroy(void);
-
-		void OnRenderSizeChanged(System::Windows::SizeChangedInfo^ info) override;
 	};
 }

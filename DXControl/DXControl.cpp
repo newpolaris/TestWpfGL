@@ -3,6 +3,7 @@
 #include "DXControl.h"
 
 #pragma managed(push, off)
+#include <assert.h>
 #include "../DxGLLib/DxLib.h"
 #pragma managed(pop)
 
@@ -20,19 +21,19 @@ ImageControl::ImageControl()
 	Background = gcnew ImageBrush(d3dimg);
 
 	Loaded += gcnew RoutedEventHandler(this, &ImageControl::executeStartRendering);
-	SizeChanged += gcnew SizeChangedEventHandler(this, &ImageControl::FastGLControl_SizeChanged);
+	SizeChanged += gcnew SizeChangedEventHandler(this, &ImageControl::OnSizeChanged);
 	Dispatcher->ShutdownStarted += gcnew System::EventHandler(this, &ImageControl::OnShutdownStarted);
-
-	m_dxglRender = new DxGLRender();
 }
 
 void ImageControl::IsFrontBufferAvailableChanged(Object^ sender, DependencyPropertyChangedEventArgs e)
 {
 	if (d3dimg->IsFrontBufferAvailable)
 	{
+		StartRendering();
 	}
 	else
 	{
+		StopRendering();
 	}
 }
 
@@ -48,42 +49,57 @@ void ImageControl::OnShutdownStarted(Object^ sender, EventArgs^ args)
 
 void ImageControl::OnRenderOpenGL(Object^ sender, EventArgs^ e)
 {
-	m_dxglRender->render();
+	if (m_bOnResizing)
+		return;
 
-	d3dimg->Lock();
-	d3dimg->AddDirtyRect(Int32Rect(0, 0, d3dimg->PixelWidth, d3dimg->PixelHeight));
-	d3dimg->Unlock();
+	if (m_dxglRender) {
+		m_dxglRender->render();
+
+		d3dimg->Lock();
+		d3dimg->AddDirtyRect(Int32Rect(0, 0, d3dimg->PixelWidth, d3dimg->PixelHeight));
+		d3dimg->Unlock();
+	}
 }
 
-void ImageControl::FastGLControl_SizeChanged(Object^ sender, SizeChangedEventArgs^ args)
+void ImageControl::OnSizeChanged(Object^ sender, SizeChangedEventArgs^ args)
 {
 	ResizeRendering();
 }
 
 void ImageControl::Destroy(void)
 {
-}
-
-void DXControl::ImageControl::OnRenderSizeChanged(System::Windows::SizeChangedInfo^ info)
-{
+	if (m_dxglRender) {
+		delete m_dxglRender;
+		m_dxglRender = nullptr;
+	}
 }
 
 void ImageControl::ResizeRendering()
 {
-	m_dxglRender->resize(ActualWidth, ActualHeight);
-	void* pSurface = m_dxglRender->getBackBuffer();
+	m_bOnResizing = true;
+	if (m_dxglRender) {
+		m_dxglRender->resize(ActualWidth, ActualHeight);
 
-	d3dimg->Lock();
-	d3dimg->SetBackBuffer(D3DResourceType::IDirect3DSurface9, IntPtr(pSurface));
-	d3dimg->Unlock();
+		void* pSurface = m_dxglRender->getBackBuffer();
+		if (pSurface == nullptr)
+			throw gcnew Exception("Create failure");
+
+		d3dimg->Lock();
+		d3dimg->SetBackBuffer(D3DResourceType::IDirect3DSurface9, IntPtr(pSurface));
+		d3dimg->Unlock();
+	}
+	m_bOnResizing = false;
 }
 
 void ImageControl::StartRendering()
 {
-	if (!m_dxglRender->create())
-		throw gcnew InvalidOperationException("Create failure");
+	assert(m_dxglRender == nullptr);
 
-	// 
+	m_dxglRender = new DxGLRender();
+	if (!m_dxglRender->create())
+		throw gcnew Exception("Create failure");
+
+	// SetBackBuffer is required
 	ResizeRendering();
 
 	CompositionTarget::Rendering += gcnew EventHandler(this, &ImageControl::OnRenderOpenGL);
@@ -91,7 +107,12 @@ void ImageControl::StartRendering()
 
 void ImageControl::StopRendering()
 {
+	assert(m_dxglRender != nullptr);
+
 	CompositionTarget::Rendering -= gcnew EventHandler(this, &ImageControl::OnRenderOpenGL);
 
 	m_dxglRender->destroy();
+
+	delete m_dxglRender;
+	m_dxglRender = nullptr;
 }

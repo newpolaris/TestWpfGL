@@ -75,6 +75,8 @@ HRESULT DX_CHECK(HRESULT hr) {
 	return hr;
 }
 
+static WGLContext* g_glContext = nullptr;
+
 struct DxGLRenderImpl
 {
 public:
@@ -98,8 +100,6 @@ public:
 
 	HWND m_hWnd = 0;
 
-	WGLContext m_glContext;
-
 	HANDLE m_glD3DHandle = 0;
 	HANDLE m_glTextureHandles[2] = { 0, 0 };
 	GLuint m_glTextures[2] = { 0, 0 };
@@ -109,6 +109,8 @@ public:
 void DxGLRenderImpl::onPreReset()
 {
 	assert(m_glD3DHandle != 0);
+
+	g_glContext->makeCurrent();
 
 	if (m_glTextureHandles[0] != 0 || m_glTextureHandles[1] != 0) {
 		wglDXUnregisterObjectNV(m_glD3DHandle, m_glTextureHandles[0]);
@@ -128,6 +130,8 @@ void DxGLRenderImpl::onPreReset()
 
 bool DxGLRenderImpl::onPostReset()
 {
+	g_glContext->makeCurrent();
+
 	UINT width = m_d3dpp.BackBufferWidth;
 	UINT height = m_d3dpp.BackBufferHeight;
 	bool lockable = false;
@@ -180,6 +184,8 @@ bool DxGLRenderImpl::onPostReset()
 
 void DxGLRenderImpl::destroy()
 {
+	g_glContext->makeCurrent();
+
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	glDeleteFramebuffers(1, &m_glFBO);
@@ -203,7 +209,7 @@ void DxGLRenderImpl::destroy()
 		m_pD3D = NULL;
 	}
 
-	m_glContext.destory();
+	// g_glContext->destory();
 
 	DestroyWindow(m_hWnd);
 	m_hWnd = 0;
@@ -216,6 +222,8 @@ void DxGLRenderImpl::resize(int width, int height)
 {
 	if (m_pd3dDevice == nullptr)
 		return;
+
+	g_glContext->makeCurrent();
 
 	D3DDEVICE_CREATION_PARAMETERS dcp;
 	DX_CHECK(m_pd3dDevice->GetCreationParameters(&dcp));
@@ -312,8 +320,11 @@ bool DxGLRenderImpl::create()
 		return false;
 	}
 
-	if (!m_glContext.create(m_hWnd))
-		return false;
+	if (g_glContext == nullptr) {
+		g_glContext = new WGLContext();
+		if (!g_glContext->create(m_hWnd))
+			return false;
+	}
 
 	// register the Direct3D device with GL
 	m_glD3DHandle = wglDXOpenDeviceNV(m_pd3dDevice);

@@ -11,6 +11,8 @@
 class TriangleRender;
 class WGLContext;
 
+static WGLContext* context = nullptr;
+
 class GraphicsEngineImpl
 {
 public:
@@ -26,7 +28,6 @@ public:
 	void resize(int width, int height);
 
 	TriangleRender* m_triangle = nullptr;
-	WGLContext* context = nullptr;
 
 	HWND m_hWindow = 0;
 	GLuint m_fbo = 0;
@@ -74,13 +75,21 @@ bool GraphicsEngineImpl::create(int width, int height, bool isVisible)
 	m_hWindow = CreateWindow(lpszClass, TEXT("dummy"), WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_POPUP,
 		0, 0, width, height,
 		NULL, (HMENU)NULL, 0, NULL);
-	ShowWindow(m_hWindow, isVisible ? SW_SHOW : SW_HIDE);
 
 	if (m_hWindow == 0)
 		return false;
-	context = new WGLContext();
-	if (!context->create(m_hWindow))
-		return false;
+
+	ShowWindow(m_hWindow, isVisible ? SW_SHOW : SW_HIDE);
+
+	// HACK: prevent make multiple context
+	//       함수 호출 과정에서 UI 이벤트 처리에 따라 새로 들어오면,
+	//       context 가 변경될 가능성이 있다
+	//       'wglDXRegisterObjectNV' 함수에서 resize 도중 render 가 들어와 문제였음
+	if (context == nullptr) {
+		context = new WGLContext();
+		if (!context->create(m_hWindow))
+			return false;
+	}
 
 	m_triangle = new TriangleRender();
 	if (!m_triangle)
@@ -99,10 +108,7 @@ void GraphicsEngineImpl::destroy()
 		delete m_triangle;
 		m_triangle = nullptr;
 	}
-	if (context) {
-		context->destory();
-		context = nullptr;
-	}
+
 	if (m_hWindow) {
 		DestroyWindow(m_hWindow);
 		m_hWindow = 0;
@@ -139,6 +145,7 @@ void GraphicsEngineImpl::renderToBuffer(char* imageBuffer)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+// 함수 작동 도중 다른 곳에서 context 를 바꾸면
 void GraphicsEngineImpl::resize(int width, int height)
 {
 	if (m_width == width && m_height == height)
