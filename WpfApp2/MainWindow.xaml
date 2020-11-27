@@ -3,10 +3,38 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:gl="clr-namespace:DXControl;assembly=DXControl"
         xmlns:local="clr-namespace:WpfApp2"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        
+        <Grid Panel.ZIndex="1">
+            <ListView VerticalAlignment="Center" HorizontalAlignment="Center"
+                      Background="Transparent"
+                      MaxHeight="100">
+                <ListView.Items>
+                    <TextBlock Text="ListViewItem_1" />
+                    <TextBlock Text="ListViewItem_2" />
+                    <TextBlock Text="ListViewItem_3" />
+                    <TextBlock Text="ListViewItem_4" />
+                    <TextBlock Text="ListViewItem_5" />
+                    <TextBlock Text="ListViewItem_6" />
+                    <TextBlock Text="ListViewItem_7" />
+                    <TextBlock Text="ListViewItem_8" />
+                </ListView.Items>
+            </ListView>
+        </Grid>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <Grid Grid.Column="0">
+                <gl:ImageControl></gl:ImageControl>
+            </Grid>
+            <Grid Grid.Column="1">
+                <gl:ImageControl></gl:ImageControl>
+            </Grid>
+        </Grid>
     </Grid>
 </Window>

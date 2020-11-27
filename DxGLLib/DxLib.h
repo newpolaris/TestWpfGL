@@ -1,8 +1,13 @@
 #pragma once
 
-class DxGLImage
+struct DxGLRenderImpl;
+
+class DxGLRender
 {
 public:
 
-	bool create();
+	DxGLRender();
+	~DxGLRender();
+
+	DxGLRenderImpl* m_pImpl = nullptr;
 };

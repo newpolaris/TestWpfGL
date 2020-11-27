@@ -94,5 +94,11 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DXControl\DXControl.vcxproj">
+      <Project>{36b70b58-4877-40c5-8a93-4f2f18ad65f8}</Project>
+      <Name>DXControl</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

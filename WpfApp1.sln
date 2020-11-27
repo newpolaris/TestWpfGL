@@ -23,6 +23,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "d3dimage", "d3dimage", "{4C61996B-EF21-4A91-84BF-D4D384EC1A3A}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DXControl", "DXControl\DXControl.vcxproj", "{36B70B58-4877-40C5-8A93-4F2F18AD65F8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6C72E685-D085-48D7-80E6-26593B69A3A9} = {6C72E685-D085-48D7-80E6-26593B69A3A9}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExampleD3dImage", "WpfApp2\ExampleD3dImage.csproj", "{15B54395-881C-432A-A106-A96DDA1CB4BA}"
 EndProject

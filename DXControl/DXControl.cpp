@@ -2,6 +2,10 @@
 
 #include "DXControl.h"
 
+#pragma managed(push, off)
+#include "../DxGLLib/DxLib.h"
+#pragma managed(pop)
+
 using namespace DXControl;
 using namespace System::Threading::Tasks;
 using namespace System::Windows::Threading;
@@ -41,22 +45,18 @@ void ImageControl::OnShutdownStarted(Object^ sender, EventArgs^ args)
 
 void ImageControl::OnRenderOpenGL(Object^ sender, EventArgs^ e)
 {
-	throw gcnew System::NotImplementedException();
 }
 
 void ImageControl::FastGLControl_SizeChanged(Object^ sender, SizeChangedEventArgs^ args)
 {
-	throw gcnew System::NotImplementedException();
 }
 
 void ImageControl::Destroy(void)
 {
-	throw gcnew System::NotImplementedException();
 }
 
 void ImageControl::OnRenderSizeChanged(System::Windows::SizeChangedInfo^ info)
 {
-	throw gcnew System::NotImplementedException();
 }
 
 void ImageControl::ResizeRendering()
