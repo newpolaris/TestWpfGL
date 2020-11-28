@@ -86,7 +86,9 @@ void ImageControl::Destroy(void)
 
 void ImageControl::ResizeRendering()
 {
-	m_bOnResizing = true;
+	// TODO: needed ?
+
+	// m_bOnResizing = true;
 	if (m_dxglRender) {
 		m_dxglRender->resize(ActualWidth, ActualHeight);
 

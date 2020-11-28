@@ -273,22 +273,7 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 bool DxGLRenderImpl::create()
 {
-	// Register the window class
-	WNDCLASSEX wc =
-	{
-		// https://stackoverflow.com/a/32806642/1890382
-		sizeof(WNDCLASSEX), CS_HREDRAW | CS_VREDRAW | CS_OWNDC, MsgProc, 0L, 0L,
-		GetModuleHandle(NULL), NULL, NULL, NULL, NULL,
-		L"D3D Tutorial", NULL
-	};
-	RegisterClassEx(&wc);
-
-	// Create the application's window
-	HWND hWnd = CreateWindow(L"D3D Tutorial", L"D3D Tutorial 02: Vertices",
-		WS_OVERLAPPEDWINDOW, 100, 100, 300, 300,
-		NULL, NULL, wc.hInstance, NULL);
-
-	m_hWnd = hWnd; //  CreateWindowA("STATIC", "temp", 0, 0, 0, 100, 100, 0, 0, 0, 0);
+	m_hWnd = CreateWindowA("STATIC", "dummy", 0, 0, 0, 100, 100, 0, 0, 0, 0);
 	assert(m_hWnd);
 
 	// System::Windows::Interop::Hw
