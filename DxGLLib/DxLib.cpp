@@ -234,6 +234,10 @@ void DxGLRenderImpl::resize(int width, int height)
 	if (m_pd3dDevice == nullptr)
 		return;
 
+	if (m_d3dpp.BackBufferWidth == width && 
+		m_d3dpp.BackBufferHeight == height)
+		return;
+
 	g_glContext->makeCurrent();
 
 	D3DDEVICE_CREATION_PARAMETERS dcp;
