@@ -85,7 +85,7 @@ static void APIENTRY glDebugCallback(GLenum source,
 	GLenum severity,
 	GLsizei length,
 	const GLchar* message,
-	GLvoid* userParam)
+	const void* userParam)
 {
 	// ignore these non-significant error codes
 	if (id == 131169 || id == 131185 || id == 131218 || id == 131204 || id == 131184)
@@ -178,7 +178,7 @@ bool WGLContext::create(HWND hWnd) {
 #if _DEBUG
 // Set debug callback
 	if (glDebugMessageCallback != NULL) {
-		// glDebugMessageCallback(glDebugCallback, NULL);
+		glDebugMessageCallback(glDebugCallback, NULL);
 	}
 	glEnable(GL_DEBUG_OUTPUT);
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);

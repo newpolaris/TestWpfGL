@@ -320,6 +320,8 @@ bool DxGLRenderImpl::create()
 		g_glContext = new WGLContext();
 		if (!g_glContext->create(m_hWnd))
 			return false;
+		if (GLAD_WGL_NV_DX_interop == 0)
+			return false;
 	}
 
 	m_triangle = new TriangleRender();
