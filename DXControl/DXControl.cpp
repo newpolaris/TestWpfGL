@@ -35,6 +35,9 @@ ImageControl::ImageControl()
 	Dispatcher->ShutdownStarted += gcnew System::EventHandler(this, &ImageControl::OnShutdownStarted);
 }
 
+// NOTE: Can't support remote desktop
+// IsFrontBufferAvailable returns false
+// but, example D3D11Image & example DX-Interop works OK. 
 void ImageControl::IsFrontBufferAvailableChanged(Object^ sender, DependencyPropertyChangedEventArgs e)
 {
 	if (d3dimg->IsFrontBufferAvailable)
@@ -98,13 +101,13 @@ void ImageControl::ResizeRendering()
 
 void ImageControl::StartRendering()
 {
-	assert(m_dxglRender == nullptr);
+	if (m_dxglRender == nullptr) {
+		m_dxglRender = new DxGLRender();
+		if (!m_dxglRender->create())
+			throw gcnew Exception("Create failure");
+	}
 
-	m_dxglRender = new DxGLRender();
-	if (!m_dxglRender->create())
-		throw gcnew Exception("Create failure");
-
-	// SetBackBuffer is required
+	// NOTE: SetBackBuffer is required
 	ResizeRendering();
 
 	CompositionTarget::Rendering += gcnew EventHandler(this, &ImageControl::OnRenderOpenGL);
@@ -112,7 +115,8 @@ void ImageControl::StartRendering()
 
 void ImageControl::StopRendering()
 {
-	assert(m_dxglRender != nullptr);
+	if (m_dxglRender == nullptr)
+		return;
 
 	CompositionTarget::Rendering -= gcnew EventHandler(this, &ImageControl::OnRenderOpenGL);
 
