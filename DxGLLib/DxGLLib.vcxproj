@@ -141,9 +141,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Direct3D9Driver.cpp" />
     <ClCompile Include="DxLib.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Direct3D9Driver.h" />
     <ClInclude Include="DxLib.h" />
   </ItemGroup>
   <ItemGroup>

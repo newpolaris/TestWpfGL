@@ -18,9 +18,15 @@
     <ClCompile Include="DxLib.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Direct3D9Driver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DxLib.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Direct3D9Driver.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

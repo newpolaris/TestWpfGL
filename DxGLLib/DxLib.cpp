@@ -6,9 +6,14 @@
 #include <glad/glad.h>
 #include <glad/glad_wgl.h>
 #include <cassert>
+#include <memory>
 
 #include <WGLContext.h>
 #include <TriangleRenderer.h>
+
+// CComPtr
+#include <atlcomcli.h>
+#pragma comment(lib, "oleaut32.lib")
 
 #pragma comment(lib, "d3d9.lib")
 #pragma comment(lib, "opengl32.lib")
@@ -71,95 +76,68 @@ HRESULT DX_CHECK(HRESULT hr) {
 	if (FAILED(hr)) {
 		OutputDebugStringA(GetDX9HResult(hr));
 		OutputDebugStringA("\n");
-		DebugBreak();
 	}
 	return hr;
 }
 
-static WGLContext* g_glContext = nullptr;
-
-class TriangleRender;
-
-struct DxGLRenderImpl
+struct D3D9FrameBuffer
 {
-public:
+	~D3D9FrameBuffer();
 
-	void onPreReset();
-	bool onPostReset();
-	void resize(int width, int height);
-	void render();
+	bool create(int width, int height);
+	void destory();
 
-	bool create();
-	void destroy();
+	void bind();
+	void unbind();
 
-	IDirect3D9Ex* m_pD3D = NULL; // Used to create the D3DDevice
-	IDirect3DDevice9Ex* m_pd3dDevice = NULL; // Our rendering device
+	void setGLHandle(HANDLE glHandle);
+	void setD3D9Device(const CComPtr<IDirect3DDevice9Ex>& device);
 
-	// create the Direct3D render targets
-	IDirect3DSurface9* m_dxColorBuffer = NULL;
-	IDirect3DSurface9* m_dxDepthBuffer = NULL;
+	int m_width = 0;
+	int m_height = 0;
 
-	D3DPRESENT_PARAMETERS m_d3dpp;
-
-	HWND m_hWnd = 0;
-
-	HANDLE m_glD3DHandle = 0;
 	HANDLE m_glTextureHandles[2] = { 0, 0 };
 	GLuint m_glTextures[2] = { 0, 0 };
 	GLuint m_glFBO = 0;
 
-	TriangleRender* m_triangle = nullptr;
+	CComPtr<IDirect3DSurface9> m_color;
+	CComPtr<IDirect3DSurface9> m_depth;
+
+	HANDLE m_glD3DHandle = 0;
+	CComPtr<IDirect3DDevice9Ex> m_pd3dDevice;
 };
 
-void DxGLRenderImpl::onPreReset()
+D3D9FrameBuffer::~D3D9FrameBuffer()
 {
-	assert(m_glD3DHandle != 0);
-
-	g_glContext->makeCurrent();
-
-	if (m_glTextureHandles[0] != 0 || m_glTextureHandles[1] != 0) {
-		wglDXUnregisterObjectNV(m_glD3DHandle, m_glTextureHandles[0]);
-		wglDXUnregisterObjectNV(m_glD3DHandle, m_glTextureHandles[1]);
-		m_glTextureHandles[0] = 0;
-		m_glTextureHandles[1] = 0;
-	}
-	if (m_dxColorBuffer) {
-		m_dxColorBuffer->Release();
-		m_dxColorBuffer = NULL;
-	}
-	if (m_dxDepthBuffer) {
-		m_dxDepthBuffer->Release();
-		m_dxDepthBuffer = NULL;
-	}
+	destory();
 }
 
-bool DxGLRenderImpl::onPostReset()
+bool D3D9FrameBuffer::create(int width, int height)
 {
-	g_glContext->makeCurrent();
+	const bool lockable = false;
 
-	UINT width = m_d3dpp.BackBufferWidth;
-	UINT height = m_d3dpp.BackBufferHeight;
-	bool lockable = false;
-
-	// D3DMULTISAMPLE_4_SAMPLES - 활성화 시, 렌더버퍼의 기존 화면이 검은색(clear 지정색과 관계 없음)으로 초기화
+	// D3DMULTISAMPLE_4_SAMPLES - 활성화 시, 렌더버퍼의 기존 화면이 유지되지 않음. 검은색(clear 지정색과 관계 없음)으로 초기화
 	// D3DMULTISAMPLE_NONE - 선택시, 기존 렌더 버퍼의 화면 유지됨
 	DX_CHECK(m_pd3dDevice->CreateRenderTarget(
 		width, height, D3DFMT_A8R8G8B8,
 		D3DMULTISAMPLE_NONE, 0, lockable,
-		&m_dxColorBuffer, NULL));
+		&m_color, NULL));
 
 	DX_CHECK(m_pd3dDevice->CreateDepthStencilSurface(
 		width, height, D3DFMT_D24S8,
 		D3DMULTISAMPLE_NONE, 0, lockable,
-		&m_dxDepthBuffer, NULL));
+		&m_depth, NULL));
 
-	m_glTextureHandles[0] = wglDXRegisterObjectNV(m_glD3DHandle, m_dxColorBuffer,
+	glGenFramebuffers(1, &m_glFBO);
+	glGenTextures(2, m_glTextures);
+
+	m_glTextureHandles[0] = wglDXRegisterObjectNV(m_glD3DHandle, m_color,
 		m_glTextures[0], GL_TEXTURE_2D,
 		WGL_ACCESS_WRITE_DISCARD_NV);
 
 	assert(m_glTextureHandles[0] != 0);
 
-	m_glTextureHandles[1] = wglDXRegisterObjectNV(m_glD3DHandle, m_dxDepthBuffer,
+	m_glTextureHandles[1] = wglDXRegisterObjectNV(m_glD3DHandle, m_depth,
 		m_glTextures[1], GL_TEXTURE_2D,
 		WGL_ACCESS_WRITE_DISCARD_NV);
 	assert(m_glTextureHandles[1] != 0);
@@ -187,15 +165,20 @@ bool DxGLRenderImpl::onPostReset()
 	return true;
 }
 
-void DxGLRenderImpl::destroy()
+void D3D9FrameBuffer::destory()
 {
-	g_glContext->makeCurrent();
+	assert(m_glD3DHandle != 0);
 
-	if (m_triangle) {
-		m_triangle->destroy();
-		delete m_triangle;
-		m_triangle = nullptr;
+	if (m_glTextureHandles[0] != 0) {
+		wglDXUnregisterObjectNV(m_glD3DHandle, m_glTextureHandles[0]);
+		m_glTextureHandles[0] = 0;
 	}
+	if (m_glTextureHandles[1] != 0) {
+		wglDXUnregisterObjectNV(m_glD3DHandle, m_glTextureHandles[1]);
+		m_glTextureHandles[1] = 0;
+	}
+	m_color = NULL;
+	m_depth = NULL;
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -206,57 +189,183 @@ void DxGLRenderImpl::destroy()
 	m_glTextures[0] = 0;
 	m_glTextures[1] = 0;
 
+	m_glD3DHandle = 0;
+	m_pd3dDevice = NULL;
+}
+
+void D3D9FrameBuffer::bind()
+{
+	assert(m_color != nullptr);
+
+	// lock the render targets for GL access
+	wglDXLockObjectsNV(m_glD3DHandle, 2, m_glTextureHandles);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_glFBO);
+}
+
+void D3D9FrameBuffer::unbind()
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// unlock the render targets
+	wglDXUnlockObjectsNV(m_glD3DHandle, 2, m_glTextureHandles);
+}
+
+void D3D9FrameBuffer::setGLHandle(HANDLE glHandle)
+{
+	m_glD3DHandle = glHandle;
+}
+
+void D3D9FrameBuffer::setD3D9Device(const CComPtr<IDirect3DDevice9Ex>& device)
+{
+	m_pd3dDevice = device;
+}
+
+class TriangleRender;
+
+using D3D9FrameBufferPtr = std::shared_ptr<struct D3D9FrameBuffer>;
+
+WGLContext* m_glContext = nullptr;
+
+class D3D9Driver
+{
+public:
+
+	bool create();
+	void destroy();
+
+	void resize(int width, int height);
+
+	D3D9FrameBufferPtr createFrameBuffer(int width, int height);
+
+	D3DPRESENT_PARAMETERS m_d3dpp;
+
+	HWND m_hWnd = 0;
+
+	HANDLE m_glD3DHandle = 0;
+
+	CComPtr<IDirect3D9Ex> m_pD3D;
+	CComPtr<IDirect3DDevice9Ex> m_pd3dDevice;
+	
+	D3D9FrameBufferPtr m_fbo;
+};
+
+D3D9Driver* getDriver()
+{
+	static D3D9Driver* driver = nullptr;
+	if (driver == nullptr) {
+		driver = new D3D9Driver();
+		driver->create();
+	}
+	return driver;
+}
+
+struct DxGLRenderImpl
+{
+public:
+
+	void onPreReset();
+	bool onPostReset();
+	void resize(int width, int height);
+	void render();
+
+	void* getBackBuffer();
+
+	bool create();
+	void destroy();
+
+	D3D9FrameBufferPtr createFrameBuffer(int width, int height);
+
+	D3DPRESENT_PARAMETERS m_d3dpp;
+
+	HWND m_hWnd = 0;
+
+	HANDLE m_glD3DHandle = 0;
+
+	CComPtr<IDirect3D9Ex> m_pD3D;
+	CComPtr<IDirect3DDevice9Ex> m_pd3dDevice;
+	
+	D3D9FrameBufferPtr m_fbo;
+
+	TriangleRender* m_triangle = NULL;
+};
+
+void DxGLRenderImpl::destroy()
+{
+	m_glContext->makeCurrent();
+
+	if (m_triangle) {
+		m_triangle->destroy();
+		delete m_triangle;
+		m_triangle = nullptr;
+	}
+
 	onPreReset();
 
 	wglDXCloseDeviceNV(m_glD3DHandle);
 	m_glD3DHandle = 0;
 
-	if (m_pd3dDevice != NULL) {
-		m_pd3dDevice->Release();
-		m_pd3dDevice = NULL;
-	}
-	if (m_pD3D != NULL) {
-		m_pD3D->Release();
-		m_pD3D = NULL;
-	}
-
-	// g_glContext->destory();
+	m_pd3dDevice = NULL;
+	m_pD3D = NULL;
 
 	DestroyWindow(m_hWnd);
 	m_hWnd = 0;
 }
 
-// https://github.com/bkaradzic/bgfx/blob/master/src/renderer_d3d9.cpp
-// Introduction to Directx 9.0c 's sample
+D3D9FrameBufferPtr DxGLRenderImpl::createFrameBuffer(int width, int height)
+{
+	auto fbo = std::make_shared<D3D9FrameBuffer>();
+	if (!fbo)
+		return nullptr;
+
+	fbo->setD3D9Device(m_pd3dDevice);
+	fbo->setGLHandle(m_glD3DHandle);
+
+	if (!fbo->create(m_d3dpp.BackBufferWidth, m_d3dpp.BackBufferHeight))
+		return nullptr;
+
+	return fbo;
+}
+
+void DxGLRenderImpl::onPreReset()
+{
+	m_glContext->makeCurrent();
+	m_fbo = nullptr;
+}
+
+bool DxGLRenderImpl::onPostReset()
+{
+	m_glContext->makeCurrent();
+	m_fbo = createFrameBuffer(m_d3dpp.BackBufferWidth, m_d3dpp.BackBufferHeight);
+
+	return true;
+}
 
 void DxGLRenderImpl::resize(int width, int height)
 {
 	if (m_pd3dDevice == nullptr)
 		return;
 
-	g_glContext->makeCurrent();
+	// device reset error when pixel area is zero
+	if (width == 0 || height == 0)
+		return;
 
-	D3DDEVICE_CREATION_PARAMETERS dcp;
-	DX_CHECK(m_pd3dDevice->GetCreationParameters(&dcp));
-
-	D3DDISPLAYMODE dm;
-	DX_CHECK(m_pD3D->GetAdapterDisplayMode(dcp.AdapterOrdinal, &dm));
+	if (width == m_d3dpp.BackBufferWidth && height == m_d3dpp.BackBufferHeight)
+		return;
 
 	m_d3dpp.BackBufferWidth = width;
 	m_d3dpp.BackBufferHeight = height;
 
-	// device reset error when pixel area is zero
-	if (m_d3dpp.BackBufferWidth == 0 || m_d3dpp.BackBufferHeight == 0)
-		return;
-
-	// DeviceEx 에서는 ResetEx 전 리소스 해제 하지 않았다고, 에러나오지 않는다.
-	// DeviceEx 에서는 MANAGED 리소스는 이제 쓸 수 없다
-	// 다만, 예전의 구조를 그냥 놓아둠
 	onPreReset();
+
+	// DeviceEx 에서는 ResetEx 전 리소스 해제 하지 않았다고, 에러나오지 않는다. 
+	// 다만 이전의 구조는 유지해 두었다.
+	// 추가로, DeviceEx 에서는 MANAGED 리소스는 이제 쓸 수 없다
 	DX_CHECK(m_pd3dDevice->ResetEx(&m_d3dpp, NULL));
+
 	onPostReset();
 
-	glViewport(0, 0, m_d3dpp.BackBufferWidth, m_d3dpp.BackBufferHeight);
+	glViewport(0, 0, width, height);
 }
 
 static void APIENTRY DebugCallback(GLenum source, GLenum type, GLuint id,
@@ -266,17 +375,11 @@ static void APIENTRY DebugCallback(GLenum source, GLenum type, GLuint id,
 	OutputDebugStringA("\n");
 }
 
-LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-	return DefWindowProc(hWnd, msg, wParam, lParam);
-}
 
 bool DxGLRenderImpl::create()
 {
 	m_hWnd = CreateWindowA("STATIC", "dummy", 0, 0, 0, 100, 100, 0, 0, 0, 0);
 	assert(m_hWnd);
-
-	// System::Windows::Interop::Hw
 
 	/*
 	 * IDirect3D9Ex device is required.
@@ -316,13 +419,17 @@ bool DxGLRenderImpl::create()
 		return false;
 	}
 
-	if (g_glContext == nullptr) {
-		g_glContext = new WGLContext();
-		if (!g_glContext->create(m_hWnd))
+	if (m_glContext == nullptr) {
+		m_glContext = new WGLContext();
+		if (!m_glContext->create(m_hWnd))
 			return false;
 		if (GLAD_WGL_NV_DX_interop == 0)
 			return false;
 	}
+
+	// register the Direct3D device with GL
+	m_glD3DHandle = wglDXOpenDeviceNV(m_pd3dDevice);
+	assert(m_glD3DHandle);
 
 	m_triangle = new TriangleRender();
 	if (!m_triangle)
@@ -330,38 +437,24 @@ bool DxGLRenderImpl::create()
 	if (!m_triangle->create())
 		return false;
 
-	// register the Direct3D device with GL
-	m_glD3DHandle = wglDXOpenDeviceNV(m_pd3dDevice);
-	assert(m_glD3DHandle);
-
-	glGenFramebuffers(1, &m_glFBO);
-	glGenTextures(2, m_glTextures);
-
-	// WM_PAINT가 Resize 보다 먼저 호출되므로,
-	onPostReset();
-
 	return true;
 }
 
 void DxGLRenderImpl::render()
 {
-	assert(m_dxColorBuffer != nullptr);
-	{
-		// lock the render targets for GL access
-		wglDXLockObjectsNV(m_glD3DHandle, 2, m_glTextureHandles);
+	assert(m_fbo != nullptr);
+	assert(m_triangle != nullptr);
 
-		glBindFramebuffer(GL_FRAMEBUFFER, m_glFBO);
-		
-		m_triangle->draw();
-		
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	m_fbo->bind();
+	m_triangle->draw();
+	m_fbo->unbind();
+}
 
-		// unlock the render targets
-		wglDXUnlockObjectsNV(m_glD3DHandle, 2, m_glTextureHandles);
-	}
-
-	// copy rendertarget to backbuffer
-	// m_pd3dDevice->StretchRect(m_dxColorBuffer, NULL, m_backBufferColor, NULL, D3DTEXF_NONE);
+void* DxGLRenderImpl::getBackBuffer()
+{
+	if (m_fbo)
+		return m_fbo->m_color;
+	return nullptr;
 }
 
 DxGLRender::DxGLRender() :
@@ -401,5 +494,15 @@ void DxGLRender::render()
 
 void* DxGLRender::getBackBuffer() const
 {
-	return m_pImpl->m_dxColorBuffer;
+	assert(m_pImpl);
+	return m_pImpl->getBackBuffer();
+}
+
+bool D3D9Driver::create()
+{
+	return false;
+}
+
+void D3D9Driver::destroy()
+{
 }

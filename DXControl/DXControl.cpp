@@ -59,9 +59,6 @@ void ImageControl::OnShutdownStarted(Object^ sender, EventArgs^ args)
 
 void ImageControl::OnRenderOpenGL(Object^ sender, EventArgs^ e)
 {
-	if (m_bOnResizing)
-		return;
-
 	if (m_dxglRender) {
 		m_dxglRender->render();
 
@@ -86,9 +83,6 @@ void ImageControl::Destroy(void)
 
 void ImageControl::ResizeRendering()
 {
-	// TODO: needed ?
-
-	// m_bOnResizing = true;
 	if (m_dxglRender) {
 		m_dxglRender->resize(ActualWidth, ActualHeight);
 
@@ -100,7 +94,6 @@ void ImageControl::ResizeRendering()
 		d3dimg->SetBackBuffer(D3DResourceType::IDirect3DSurface9, IntPtr(pSurface));
 		d3dimg->Unlock();
 	}
-	m_bOnResizing = false;
 }
 
 void ImageControl::StartRendering()

@@ -13,7 +13,6 @@ namespace DXControl {
 
 		System::Windows::Interop::D3DImage^ d3dimg;
 		DxGLRender* m_dxglRender;
-		bool m_bOnResizing = false;
 
 		void executeStartRendering(Object^ sender, RoutedEventArgs^ args);
 		void OnSizeChanged(Object^ sender, SizeChangedEventArgs^ args);
