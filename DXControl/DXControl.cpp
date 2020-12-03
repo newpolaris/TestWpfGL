@@ -93,6 +93,9 @@ void ImageControl::ResizeRendering()
 		if (pSurface == nullptr)
 			throw gcnew Exception("Create failure");
 
+		// 원격 데스크톱 지원을 위해선, 3번째 software render 를 true로,
+		// 그리고, IsFrontBufferAvailable 가 false가 나와도 그냥 startRendering 수행시
+		// 정상처럼 렌더링 되는 것 처럼 보인다
 		d3dimg->Lock();
 		d3dimg->SetBackBuffer(D3DResourceType::IDirect3DSurface9, IntPtr(pSurface));
 		d3dimg->Unlock();
