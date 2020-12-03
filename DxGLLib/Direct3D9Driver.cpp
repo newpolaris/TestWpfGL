@@ -132,7 +132,11 @@ bool D3D9FrameBuffer::create(int width, int height)
 
 void D3D9FrameBuffer::destory()
 {
-	assert(m_glD3DHandle != 0);
+	if (!m_pd3dDevice)
+		return;
+
+	if (!m_glD3DHandle)
+		return;
 
 	if (m_glTextureHandles[0] != 0) {
 		wglDXUnregisterObjectNV(m_glD3DHandle, m_glTextureHandles[0]);
@@ -147,14 +151,22 @@ void D3D9FrameBuffer::destory()
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	glDeleteFramebuffers(1, &m_glFBO);
-	m_glFBO = 0;
+	if (m_glFBO) {
+		glDeleteFramebuffers(1, &m_glFBO);
+		m_glFBO = 0;
+	}
 
-	glDeleteTextures(2, m_glTextures);
-	m_glTextures[0] = 0;
-	m_glTextures[1] = 0;
+	if (m_glTextures[0]) {
+		glDeleteTextures(1, &m_glTextures[0]);
+		m_glTextures[0] = 0;
+	}
+	if (m_glTextures[1]) {
+		glDeleteTextures(1, &m_glTextures[1]);
+		m_glTextures[1] = 0;
+	}
 
 	m_glD3DHandle = 0;
+
 	m_pd3dDevice = NULL;
 }
 
@@ -253,14 +265,20 @@ bool D3D9Driver::create()
 
 void D3D9Driver::destroy()
 {
-	wglDXCloseDeviceNV(m_glD3DHandle);
-	m_glD3DHandle = 0;
+	if (m_glD3DHandle) {
+		wglDXCloseDeviceNV(m_glD3DHandle);
+		m_glD3DHandle = 0;
+	}
 
 	m_pd3dDevice = NULL;
 	m_pD3D = NULL;
 
-	DestroyWindow(m_hWnd);
-	m_hWnd = 0;
+	m_wglContext = nullptr;
+
+	if (m_hWnd) {
+		DestroyWindow(m_hWnd);
+		m_hWnd = 0;
+	}
 }
 
 void D3D9Driver::resize(int width, int height)
