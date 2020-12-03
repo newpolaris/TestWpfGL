@@ -225,158 +225,38 @@ class TriangleRender;
 
 using D3D9FrameBufferPtr = std::shared_ptr<struct D3D9FrameBuffer>;
 
-WGLContext* m_glContext = nullptr;
-
 class D3D9Driver
 {
 public:
 
+	~D3D9Driver();
+
 	bool create();
 	void destroy();
 
 	void resize(int width, int height);
+	void makeCurrent();
 
 	D3D9FrameBufferPtr createFrameBuffer(int width, int height);
 
-	D3DPRESENT_PARAMETERS m_d3dpp;
-
 	HWND m_hWnd = 0;
+
+	std::shared_ptr<WGLContext> m_wglContext;
+
+	D3DPRESENT_PARAMETERS m_d3dpp;
 
 	HANDLE m_glD3DHandle = 0;
 
 	CComPtr<IDirect3D9Ex> m_pD3D;
 	CComPtr<IDirect3DDevice9Ex> m_pd3dDevice;
-	
-	D3D9FrameBufferPtr m_fbo;
 };
 
-D3D9Driver* getDriver()
+D3D9Driver::~D3D9Driver()
 {
-	static D3D9Driver* driver = nullptr;
-	if (driver == nullptr) {
-		driver = new D3D9Driver();
-		driver->create();
-	}
-	return driver;
+	destroy();
 }
 
-struct DxGLRenderImpl
-{
-public:
-
-	void onPreReset();
-	bool onPostReset();
-	void resize(int width, int height);
-	void render();
-
-	void* getBackBuffer();
-
-	bool create();
-	void destroy();
-
-	D3D9FrameBufferPtr createFrameBuffer(int width, int height);
-
-	D3DPRESENT_PARAMETERS m_d3dpp;
-
-	HWND m_hWnd = 0;
-
-	HANDLE m_glD3DHandle = 0;
-
-	CComPtr<IDirect3D9Ex> m_pD3D;
-	CComPtr<IDirect3DDevice9Ex> m_pd3dDevice;
-	
-	D3D9FrameBufferPtr m_fbo;
-
-	TriangleRender* m_triangle = NULL;
-};
-
-void DxGLRenderImpl::destroy()
-{
-	m_glContext->makeCurrent();
-
-	if (m_triangle) {
-		m_triangle->destroy();
-		delete m_triangle;
-		m_triangle = nullptr;
-	}
-
-	onPreReset();
-
-	wglDXCloseDeviceNV(m_glD3DHandle);
-	m_glD3DHandle = 0;
-
-	m_pd3dDevice = NULL;
-	m_pD3D = NULL;
-
-	DestroyWindow(m_hWnd);
-	m_hWnd = 0;
-}
-
-D3D9FrameBufferPtr DxGLRenderImpl::createFrameBuffer(int width, int height)
-{
-	auto fbo = std::make_shared<D3D9FrameBuffer>();
-	if (!fbo)
-		return nullptr;
-
-	fbo->setD3D9Device(m_pd3dDevice);
-	fbo->setGLHandle(m_glD3DHandle);
-
-	if (!fbo->create(m_d3dpp.BackBufferWidth, m_d3dpp.BackBufferHeight))
-		return nullptr;
-
-	return fbo;
-}
-
-void DxGLRenderImpl::onPreReset()
-{
-	m_glContext->makeCurrent();
-	m_fbo = nullptr;
-}
-
-bool DxGLRenderImpl::onPostReset()
-{
-	m_glContext->makeCurrent();
-	m_fbo = createFrameBuffer(m_d3dpp.BackBufferWidth, m_d3dpp.BackBufferHeight);
-
-	return true;
-}
-
-void DxGLRenderImpl::resize(int width, int height)
-{
-	if (m_pd3dDevice == nullptr)
-		return;
-
-	// device reset error when pixel area is zero
-	if (width == 0 || height == 0)
-		return;
-
-	if (width == m_d3dpp.BackBufferWidth && height == m_d3dpp.BackBufferHeight)
-		return;
-
-	m_d3dpp.BackBufferWidth = width;
-	m_d3dpp.BackBufferHeight = height;
-
-	onPreReset();
-
-	// DeviceEx 에서는 ResetEx 전 리소스 해제 하지 않았다고, 에러나오지 않는다. 
-	// 다만 이전의 구조는 유지해 두었다.
-	// 추가로, DeviceEx 에서는 MANAGED 리소스는 이제 쓸 수 없다
-	DX_CHECK(m_pd3dDevice->ResetEx(&m_d3dpp, NULL));
-
-	onPostReset();
-
-	glViewport(0, 0, width, height);
-}
-
-static void APIENTRY DebugCallback(GLenum source, GLenum type, GLuint id,
-	GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
-{
-	OutputDebugStringA(message);
-	OutputDebugStringA("\n");
-}
-
-
-bool DxGLRenderImpl::create()
+bool D3D9Driver::create()
 {
 	m_hWnd = CreateWindowA("STATIC", "dummy", 0, 0, 0, 100, 100, 0, 0, 0, 0);
 	assert(m_hWnd);
@@ -419,17 +299,134 @@ bool DxGLRenderImpl::create()
 		return false;
 	}
 
-	if (m_glContext == nullptr) {
-		m_glContext = new WGLContext();
-		if (!m_glContext->create(m_hWnd))
-			return false;
-		if (GLAD_WGL_NV_DX_interop == 0)
-			return false;
-	}
+	auto wglContext = std::make_shared<WGLContext>();
+	if (!wglContext->create(m_hWnd))
+		return false;
+	if (GLAD_WGL_NV_DX_interop == 0)
+		return false;
+	m_wglContext = wglContext;
+
+	// requires current wglContext
+	assert(m_wglContext);
 
 	// register the Direct3D device with GL
 	m_glD3DHandle = wglDXOpenDeviceNV(m_pd3dDevice);
 	assert(m_glD3DHandle);
+
+	return true;
+}
+
+void D3D9Driver::destroy()
+{
+	wglDXCloseDeviceNV(m_glD3DHandle);
+	m_glD3DHandle = 0;
+
+	m_pd3dDevice = NULL;
+	m_pD3D = NULL;
+
+	DestroyWindow(m_hWnd);
+	m_hWnd = 0;
+}
+
+void D3D9Driver::resize(int width, int height)
+{
+	if (m_pd3dDevice == nullptr)
+		return;
+
+	// device reset error when pixel area is zero
+	if (width == 0 || height == 0)
+		return;
+
+	if (width == m_d3dpp.BackBufferWidth && height == m_d3dpp.BackBufferHeight)
+		return;
+
+	m_d3dpp.BackBufferWidth = width;
+	m_d3dpp.BackBufferHeight = height;
+
+	// DeviceEx 에서는 ResetEx 호출 전 리소스 해제 할 필요가 없다
+	// 화면 surface 크기 갱신
+	DX_CHECK(m_pd3dDevice->ResetEx(&m_d3dpp, NULL));
+}
+
+void D3D9Driver::makeCurrent()
+{
+	m_wglContext->makeCurrent();
+}
+
+D3D9FrameBufferPtr D3D9Driver::createFrameBuffer(int width, int height)
+{
+	auto fbo = std::make_shared<D3D9FrameBuffer>();
+	if (!fbo)
+		return nullptr;
+
+	fbo->setD3D9Device(m_pd3dDevice);
+	fbo->setGLHandle(m_glD3DHandle);
+
+	if (!fbo->create(width, height))
+		return nullptr;
+
+	return fbo;
+}
+
+D3D9Driver* getOrCreateDriver()
+{
+	static std::unique_ptr<D3D9Driver> s_driver;
+	if (s_driver == nullptr) {
+		auto driver = std::make_unique<D3D9Driver>();
+		if (driver->create()) {
+			s_driver = std::move(driver);
+		}
+	}
+	return s_driver.get();
+}
+
+struct DxGLRenderImpl
+{
+public:
+
+	void resize(int width, int height);
+	void render();
+
+	void* getBackBuffer();
+
+	bool create();
+	void destroy();
+
+	D3D9Driver* m_driver = NULL;
+	TriangleRender* m_triangle = NULL;
+
+	D3D9FrameBufferPtr m_fbo;
+};
+
+void DxGLRenderImpl::destroy()
+{
+	if (m_triangle) {
+		m_triangle->destroy();
+		delete m_triangle;
+		m_triangle = nullptr;
+	}
+
+	m_fbo = nullptr;
+}
+
+void DxGLRenderImpl::resize(int width, int height)
+{
+	m_driver->makeCurrent();
+
+	// 화면 surface 사용하지 않으므로 update 하지 않는다
+	// m_driver->resize(width, height);
+
+	// recreate framebuffer
+	m_fbo = m_driver->createFrameBuffer(width, height);
+
+	glViewport(0, 0, width, height);
+}
+
+bool DxGLRenderImpl::create()
+{
+	m_driver = getOrCreateDriver();
+	if (!m_driver)
+		return false;
 
 	m_triangle = new TriangleRender();
 	if (!m_triangle)
@@ -444,6 +441,8 @@ void DxGLRenderImpl::render()
 {
 	assert(m_fbo != nullptr);
 	assert(m_triangle != nullptr);
+
+	m_driver->makeCurrent();
 
 	m_fbo->bind();
 	m_triangle->draw();
@@ -498,11 +497,3 @@ void* DxGLRender::getBackBuffer() const
 	return m_pImpl->getBackBuffer();
 }
 
-bool D3D9Driver::create()
-{
-	return false;
-}
-
-void D3D9Driver::destroy()
-{
-}
